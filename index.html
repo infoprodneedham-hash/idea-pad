@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-200">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IdeaPad - Architectural Drafting & AI Visual Prompt Suite</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Custom Blueprint & Drafting Desk Background */
+    .drafting-desk-bg {
+      background-color: #dbe7f2;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, transparent 80%),
+        linear-gradient(to right, rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    /* Architectural Paper Canvas Texture */
+    .architect-paper {
+      background-color: #ffffff;
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Drafting Grid Lines on Canvas */
+    .canvas-grid-sub {
+      pointer-events: none;
+      background-size: var(--grid-size, 25px) var(--grid-size, 25px);
+      background-image: 
+        linear-gradient(to right, rgba(96, 165, 250, 0.22) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(96, 165, 250, 0.22) 1px, transparent 1px);
+    }
+
+    .canvas-grid-major {
+      pointer-events: none;
+      background-size: calc(var(--grid-size, 25px) * 5) calc(var(--grid-size, 25px) * 5);
+      background-image: 
+        linear-gradient(to right, rgba(37, 99, 235, 0.38) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(37, 99, 235, 0.38) 1px, transparent 1px);
+    }
+
+    /* Laser Guideline Glow Effects */
+    .laser-line-v {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981, 0 0 12px #34d399, 0 0 20px rgba(52, 211, 153, 0.7);
+      pointer-events: none;
+      z-index: 25;
+      transition: opacity 0.15s ease;
+    }
+
+    .laser-line-h {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981, 0 0 12px #34d399, 0 0 20px rgba(52, 211, 153, 0.7);
+      pointer-events: none;
+      z-index: 25;
+      transition: opacity 0.15s ease;
+    }
+
+    .laser-crosshair {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 26;
+      border: 1.5px solid #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981, inset 0 0 6px #10b981;
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.85; }
+      50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.85; }
+    }
+
+    /* Laser Drag Handles */
+    .laser-handle-h {
+      position: absolute;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 26px;
+      background: #0f172a;
+      border: 2px solid #10b981;
+      border-radius: 4px;
+      cursor: ew-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    .laser-handle-v {
+      position: absolute;
+      left: 0;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 20px;
+      background: #0f172a;
+      border: 2px solid #10b981;
+      border-radius: 4px;
+      cursor: ns-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Custom smooth transition for collapsible right panel */
+    .slide-panel-transition {
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.32s ease;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="h-screen w-screen flex flex-col bg-slate-100 text-slate-800">
+
+  <!-- TOP HEADER / NAV BAR -->
+  <header class="h-13 bg-white/90 backdrop-blur border-b border-slate-200/80 px-4 flex items-center justify-between z-40 shrink-0 shadow-sm">
+    <!-- Brand & Blueprint Info -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-md shadow-blue-500/25">
+          <i class="ph-bold ph-pencil-ruler text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold tracking-tight text-slate-900 flex items-center gap-1.5">
+            IdeaPad
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-mono-code font-semibold">A3 DRAFT</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 -mt-0.5">Architectural Prompt & Geometry Studio</p>
+        </div>
+      </div>
+
+      <div class="h-5 w-[1px] bg-slate-200 mx-2"></div>
+
+      <!-- Sheet Tabs (Up to 3 sheets) -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200" id="sheet-tabs">
+        <button data-sheet="0" class="sheet-tab active px-3 py-1 text-xs rounded-md font-semibold transition-all bg-white text-blue-600 shadow-sm border border-slate-200/80 flex items-center gap-1.5">
+          <i class="ph-bold ph-file-dashed"></i> Sheet 1
+        </button>
+        <button data-sheet="1" class="sheet-tab px-3 py-1 text-xs rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition-all flex items-center gap-1.5">
+          <i class="ph-bold ph-file-dashed"></i> Sheet 2
+        </button>
+        <button data-sheet="2" class="sheet-tab px-3 py-1 text-xs rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition-all flex items-center gap-1.5">
+          <i class="ph-bold ph-file-dashed"></i> Sheet 3
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Quick Actions: Laser guide toggles, Undo/Redo & Canvas scale -->
+    <div class="flex items-center gap-2">
+      <!-- Undo / Redo -->
+      <div class="flex items-center bg-slate-100 rounded-lg border border-slate-200 p-0.5 shadow-inner">
+        <button id="btn-undo" title="Undo (Ctrl+Z)" class="p-1.5 rounded hover:bg-white text-slate-700 disabled:opacity-30 transition-all">
+          <i class="ph-bold ph-arrow-u-up-left text-base"></i>
+        </button>
+        <button id="btn-redo" title="Redo (Ctrl+Y)" class="p-1.5 rounded hover:bg-white text-slate-700 disabled:opacity-30 transition-all">
+          <i class="ph-bold ph-arrow-u-up-right text-base"></i>
+        </button>
+        <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
+        <button id="btn-clear-active" title="Clear Active Layer" class="p-1.5 rounded hover:bg-rose-50 text-slate-700 hover:text-rose-600 transition-colors">
+          <i class="ph-bold ph-trash text-base"></i>
+        </button>
+      </div>
+
+      <!-- Laser Guide Controls -->
+      <div class="flex items-center bg-slate-100 rounded-lg border border-slate-200 px-2 py-1 gap-2 text-xs font-medium text-slate-700 shadow-inner">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" id="toggle-laser" class="accent-emerald-600 rounded cursor-pointer" checked>
+          <span class="flex items-center gap-1 text-emerald-700 font-semibold">
+            <i class="ph-bold ph-crosshair-simple text-sm"></i> Laser Lines
+          </span>
+        </label>
+        <span class="text-slate-300">|</span>
+        <button id="btn-reset-laser" title="Center Laser to Center Point" class="text-[11px] text-slate-600 hover:text-blue-600 transition">
+          Center
+        </button>
+      </div>
+
+      <div class="hidden md:flex items-center bg-slate-100 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-mono-code text-slate-600 gap-2">
+        <span class="font-semibold text-slate-800">A3 Landscape</span>
+        <span class="text-slate-300">|</span>
+        <span>420 × 297 mm</span>
+      </div>
+    </div>
+
+    <!-- Right Controls: Save Slots, Export & Panel Toggle -->
+    <div class="flex items-center gap-2">
+      <button id="btn-manage-slots" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 border border-slate-200 transition shadow-sm">
+        <i class="ph-bold ph-floppy-disk text-blue-600"></i>
+        <span>Memory Slots</span>
+      </button>
+
+      <!-- Export Snapshot Dropdown -->
+      <div class="relative group">
+        <button id="btn-export-dropdown" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/25 transition">
+          <i class="ph-bold ph-camera"></i>
+          <span>Snapshot</span>
+          <i class="ph-bold ph-caret-down text-[10px]"></i>
+        </button>
+        <div class="absolute right-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50 hidden group-hover:block hover:block">
+          <button id="btn-export-png" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition">
+            <span class="font-bold text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">PNG</span> High Res Transparent
+          </button>
+          <button id="btn-export-jpg" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition">
+            <span class="font-bold text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">JPG</span> Flattened Drafting White
+          </button>
+          <div class="border-t border-slate-100 my-1"></div>
+          <button id="btn-copy-clipboard" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition">
+            <i class="ph-bold ph-copy text-amber-500"></i> Copy to Clipboard
+          </button>
+        </div>
+      </div>
+
+      <div class="h-5 w-[1px] bg-slate-200 mx-1"></div>
+
+      <!-- Dedicated Right Sidebar Toggle Button -->
+      <button id="btn-toggle-sidebar" title="Toggle Layers & Options Panel" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shadow-sm flex items-center gap-1 text-xs font-medium">
+        <i class="ph-bold ph-sidebar-simple text-lg text-slate-700"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE ROW -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT TOOLS BAR -->
+    <aside class="w-16 bg-white/95 border-r border-slate-200 flex flex-col items-center py-3 gap-1 z-30 shrink-0 shadow-sm">
+      
+      <!-- Selection / Laser Guide Inspector -->
+      <button data-tool="select" title="Laser / Coordinate Inspector (V)" class="tool-btn active w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-crosshair text-lg"></i>
+      </button>
+
+      <div class="w-8 h-[1px] bg-slate-200 my-1"></div>
+
+      <!-- Freehand Tools -->
+      <button data-tool="pen" title="Technical Ink Pen (Crisp line)" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-pen-nib text-lg"></i>
+      </button>
+      <button data-tool="texter" title="Texter / Chisel Marker (Semi-translucent fill)" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-highlighter text-lg"></i>
+      </button>
+      <button data-tool="brush" title="Artist Drafting Brush (Soft stroke)" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-paint-brush text-lg"></i>
+      </button>
+      <button data-tool="spray" title="Spray Paint / Airbrush Spatter" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-drop text-lg"></i>
+      </button>
+      <button data-tool="eraser" title="Drafting Eraser" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-eraser text-lg"></i>
+      </button>
+
+      <div class="w-8 h-[1px] bg-slate-200 my-1"></div>
+
+      <!-- Straight & Polygonal Line Tools -->
+      <button data-tool="line" title="Straight Line Tool (Point A -> Point B)" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-line-segment text-lg"></i>
+      </button>
+      <button data-tool="polyline" title="Polyline / Closed Polygon (A -> B -> C -> Close A)" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-polygon text-lg"></i>
+      </button>
+
+      <div class="w-8 h-[1px] bg-slate-200 my-1"></div>
+
+      <!-- Geometric Hollow Shapes -->
+      <button data-tool="rect" title="Hollow Rectangle / Square" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-square text-lg"></i>
+      </button>
+      <button data-tool="circle" title="Hollow Circle / Ellipse" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-circle text-lg"></i>
+      </button>
+      <button data-tool="triangle" title="Hollow Triangle" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-triangle text-lg"></i>
+      </button>
+    </aside>
+
+    <!-- CENTER DRAFTING DESK AREA -->
+    <main class="flex-1 flex flex-col drafting-desk-bg overflow-hidden relative">
+
+      <!-- TOOL PROPERTIES STRIP -->
+      <div class="h-10 bg-white/80 backdrop-blur border-b border-slate-200/80 px-4 flex items-center justify-between text-xs text-slate-700 z-20 shrink-0">
+        <div class="flex items-center gap-4">
+          <!-- Active Tool Indicator -->
+          <div class="flex items-center gap-1.5 font-medium">
+            <span class="text-slate-400 uppercase text-[10px] tracking-wider">Tool:</span>
+            <span id="active-tool-name" class="font-bold text-blue-600 flex items-center gap-1">
+              <i class="ph-bold ph-pen-nib"></i> Technical Pen
+            </span>
+          </div>
+
+          <div class="h-3 w-[1px] bg-slate-300"></div>
+
+          <!-- Stroke Size Slider -->
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 font-medium">Thickness:</span>
+            <input type="range" id="prop-stroke-width" min="1" max="60" value="3" class="w-20 accent-blue-600 cursor-pointer">
+            <span id="label-stroke-width" class="font-mono-code text-[11px] text-slate-800 w-6">3px</span>
+          </div>
+
+          <div class="h-3 w-[1px] bg-slate-300"></div>
+
+          <!-- Opacity Slider -->
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 font-medium">Opacity:</span>
+            <input type="range" id="prop-opacity" min="5" max="100" value="100" class="w-16 accent-blue-600 cursor-pointer">
+            <span id="label-opacity" class="font-mono-code text-[11px] text-slate-800 w-8">100%</span>
+          </div>
+
+          <div class="h-3 w-[1px] bg-slate-300"></div>
+
+          <!-- Snap-to-Grid Options -->
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-700 select-none">
+              <input type="checkbox" id="prop-snap-grid" class="accent-blue-600 rounded cursor-pointer" checked>
+              <span class="font-semibold flex items-center gap-1">
+                <i class="ph-bold ph-magnet"></i> Snap Grid
+              </span>
+            </label>
+
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-500 select-none">
+              <input type="checkbox" id="prop-show-grid" class="accent-blue-600 rounded cursor-pointer" checked>
+              <span>Show Grid</span>
+            </label>
+
+            <select id="prop-grid-step" class="bg-slate-100 border border-slate-200 text-slate-700 text-[11px] rounded px-2 py-0.5 outline-none font-mono-code font-medium">
+              <option value="15">15 mm Grid</option>
+              <option value="25" selected>25 mm Standard</option>
+              <option value="50">50 mm Module</option>
+              <option value="100">100 mm Structural</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Laser Guide Coordinates Live Display -->
+        <div class="flex items-center gap-3 font-mono-code text-[11px]">
+          <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded text-emerald-800">
+            <i class="ph-bold ph-crosshair-simple text-emerald-600"></i>
+            <span id="laser-cross-coords">Laser X: 600 mm | Y: 421 mm</span>
+          </div>
+          <span id="cursor-coords" class="text-slate-500">Ptr X: 000 | Y: 000</span>
+          <span id="active-poly-status" class="text-amber-600 font-semibold hidden">Polyline active: Click next or close loop</span>
+        </div>
+      </div>
+
+      <!-- VIEWPORT (SCROLLABLE & CENTERED DRAFTING DESK) -->
+      <div id="viewport" class="flex-1 relative overflow-auto flex items-center justify-center p-8">
+        
+        <!-- A3 CANVAS ASSEMBLY (Including Left & Bottom Rulers) -->
+        <!-- Fixed A3 Landscape dimensions: 1190 x 842 pt/px -->
+        <div id="canvas-workspace-box" class="relative architect-paper rounded shadow-2xl" style="padding-left: 32px; padding-bottom: 32px;">
+          
+          <!-- LEFT VERTICAL MEASUREMENT RULER -->
+          <div id="ruler-vertical" class="absolute left-0 top-0 bottom-8 w-8 border-r border-slate-300 bg-slate-100 text-[9px] font-mono-code text-slate-500 select-none cursor-ns-resize overflow-visible" title="Click or drag to move Horizontal Laser Line">
+            <canvas id="ruler-v-canvas" class="w-full h-full block pointer-events-none"></canvas>
+            
+            <!-- Laser Vertical Slider Handle -->
+            <div id="handle-laser-v" class="laser-handle-v" title="Drag Horizontal Laser line">
+              <div class="w-2.5 h-[2px] bg-emerald-400 rounded"></div>
+            </div>
+          </div>
+
+          <!-- BOTTOM HORIZONTAL MEASUREMENT RULER -->
+          <div id="ruler-horizontal" class="absolute left-8 right-0 bottom-0 h-8 border-t border-slate-300 bg-slate-100 text-[9px] font-mono-code text-slate-500 select-none cursor-ew-resize overflow-visible" title="Click or drag to move Vertical Laser Line">
+            <canvas id="ruler-h-canvas" class="w-full h-full block pointer-events-none"></canvas>
+
+            <!-- Laser Horizontal Slider Handle -->
+            <div id="handle-laser-h" class="laser-handle-h" title="Drag Vertical Laser line">
+              <div class="h-2.5 w-[2px] bg-emerald-400 rounded"></div>
+            </div>
+          </div>
+
+          <!-- CORNER JUNCTION (BOTTOM-LEFT) -->
+          <div class="absolute left-0 bottom-0 w-8 h-8 bg-slate-200 border-r border-t border-slate-300 flex items-center justify-center text-[9px] font-mono-code font-bold text-slate-500">
+            mm
+          </div>
+
+          <!-- THE CANVAS STACK (1190 x 842 Landscape A3) -->
+          <div id="canvas-container" class="relative overflow-hidden bg-white" style="width: 1190px; height: 842px;">
+            
+            <!-- Canvas Grid Overlays -->
+            <div id="grid-sub" class="canvas-grid-sub absolute inset-0"></div>
+            <div id="grid-major" class="canvas-grid-major absolute inset-0"></div>
+
+            <!-- THREE CANVAS LAYERS -->
+            <!-- Layer 1: Bottom (Foundation / Layout / Wireframe) -->
+            <canvas id="layer-bottom" width="1190" height="842" class="absolute inset-0 pointer-events-none"></canvas>
+
+            <!-- Layer 2: Middle (Drafting / Color Wash / Notes) -->
+            <canvas id="layer-middle" width="1190" height="842" class="absolute inset-0 pointer-events-none"></canvas>
+
+            <!-- Layer 3: Top (Ink / Outlines / Final Architectural Detail) -->
+            <canvas id="layer-top" width="1190" height="842" class="absolute inset-0 pointer-events-none"></canvas>
+
+            <!-- Interactive Drawing Scratchpad -->
+            <canvas id="canvas-scratch" width="1190" height="842" class="absolute inset-0 cursor-crosshair z-10"></canvas>
+
+            <!-- NEON GREEN LASER BEAMS & CROSSHAIR INTERSECTION -->
+            <div id="laser-container" class="absolute inset-0 pointer-events-none z-20">
+              <!-- Vertical Laser Guideline (Shoots from bottom up) -->
+              <div id="laser-vertical-beam" class="laser-line-v" style="left: 595px;"></div>
+              
+              <!-- Horizontal Laser Guideline (Shoots from left across) -->
+              <div id="laser-horizontal-beam" class="laser-line-h" style="top: 421px;"></div>
+
+              <!-- Glowing Crosshair at Intersection -->
+              <div id="laser-crosshair-badge" class="laser-crosshair" style="left: 595px; top: 421px;">
+                <!-- Mini coordinate HUD badge floating near crosshair -->
+                <div id="hud-badge" class="absolute left-6 top-6 bg-slate-900/90 text-emerald-400 font-mono-code text-[10px] px-2 py-0.5 rounded shadow-lg border border-emerald-500/50 whitespace-nowrap pointer-events-none">
+                  X: 595 | Y: 421 mm
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- RIGHT COLLAPSIBLE SIDEBAR (SLIDES OUT TO THE RIGHT) -->
+    <aside id="sidebar-right" class="w-72 bg-white/95 backdrop-blur border-l border-slate-200 flex flex-col z-30 shrink-0 shadow-lg slide-panel-transition relative">
+      
+      <!-- Pop-out / Slide-in Toggle Tab attached to sidebar's left edge -->
+      <button id="btn-tab-collapse" class="absolute -left-7 top-16 w-7 h-12 bg-white border-l border-y border-slate-300 rounded-l-lg shadow-md flex items-center justify-center text-slate-600 hover:text-blue-600 transition" title="Slide Away / Pop Out Options">
+        <i id="collapse-arrow-icon" class="ph-bold ph-caret-right text-base"></i>
+      </button>
+
+      <!-- Sidebar Header -->
+      <div class="p-3.5 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+            <i class="ph-bold ph-stack"></i>
+          </div>
+          <div>
+            <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wide">3-Tier Layers</h2>
+            <p class="text-[10px] text-slate-500" id="sidebar-sheet-status">Active: Sheet 1</p>
+          </div>
+        </div>
+
+        <button id="btn-sidebar-close" class="text-slate-400 hover:text-slate-700 p-1 rounded transition" title="Hide Sidebar">
+          <i class="ph-bold ph-x text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Layers Stack Panel -->
+      <div class="p-3.5 flex flex-col gap-2.5 flex-1 overflow-y-auto" id="layers-panel">
+
+        <!-- TOP LAYER -->
+        <div data-layer="top" class="layer-item active p-3 rounded-xl border border-blue-500 bg-blue-50/70 shadow-sm flex flex-col gap-2 cursor-pointer transition">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button class="layer-vis-btn text-slate-600 hover:text-blue-600 transition" data-target="top" title="Toggle Visibility">
+                <i class="ph-bold ph-eye text-base"></i>
+              </button>
+              <div>
+                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Top Layer
+                </span>
+                <span class="text-[10px] text-slate-500">Inks & Outlines</span>
+              </div>
+            </div>
+            <span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold uppercase">Active</span>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-200/80">
+            <span class="font-mono-code text-[10px]">Layer 3 (Front)</span>
+            <button class="layer-clear-btn hover:text-rose-600 text-slate-400 text-xs flex items-center gap-1 transition" data-target="top">
+              <i class="ph-bold ph-trash-simple"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- MIDDLE LAYER -->
+        <div data-layer="middle" class="layer-item p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 shadow-sm flex flex-col gap-2 cursor-pointer transition">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button class="layer-vis-btn text-slate-600 hover:text-blue-600 transition" data-target="middle" title="Toggle Visibility">
+                <i class="ph-bold ph-eye text-base"></i>
+              </button>
+              <div>
+                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Middle Layer
+                </span>
+                <span class="text-[10px] text-slate-500">Drafting / Color Tone</span>
+              </div>
+            </div>
+            <span class="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold uppercase">Draft</span>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-200/80">
+            <span class="font-mono-code text-[10px]">Layer 2 (Mid)</span>
+            <button class="layer-clear-btn hover:text-rose-600 text-slate-400 text-xs flex items-center gap-1 transition" data-target="middle">
+              <i class="ph-bold ph-trash-simple"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- BOTTOM LAYER -->
+        <div data-layer="bottom" class="layer-item p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 shadow-sm flex flex-col gap-2 cursor-pointer transition">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button class="layer-vis-btn text-slate-600 hover:text-blue-600 transition" data-target="bottom" title="Toggle Visibility">
+                <i class="ph-bold ph-eye text-base"></i>
+              </button>
+              <div>
+                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Bottom Layer
+                </span>
+                <span class="text-[10px] text-slate-500">Foundation / Grid Base</span>
+              </div>
+            </div>
+            <span class="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold uppercase">Base</span>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-200/80">
+            <span class="font-mono-code text-[10px]">Layer 1 (Back)</span>
+            <button class="layer-clear-btn hover:text-rose-600 text-slate-400 text-xs flex items-center gap-1 transition" data-target="bottom">
+              <i class="ph-bold ph-trash-simple"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Laser Guide Settings Card -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-2 mt-2">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+            <span class="flex items-center gap-1 text-emerald-700">
+              <i class="ph-bold ph-laser text-sm"></i> Laser Guide Pos
+            </span>
+            <button id="btn-lock-laser" class="text-[10px] text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1">
+              <i class="ph-bold ph-lock-key"></i> Lock
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono-code">
+            <div>
+              <label class="text-[10px] text-slate-500">X (mm):</label>
+              <input type="number" id="input-laser-x" min="0" max="1190" value="595" class="w-full bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-800 outline-none">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500">Y (mm):</label>
+              <input type="number" id="input-laser-y" min="0" max="842" value="421" class="w-full bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-800 outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Image Prompt Architecture Card -->
+        <div class="p-3 bg-blue-50/60 border border-blue-100 rounded-xl mt-1">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-blue-900 mb-1">
+            <i class="ph-bold ph-sparkle text-blue-600"></i> AI Visual Prompting
+          </div>
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Draw rough structural wireframes on Bottom, paint architectural color masses on Middle, and detail structural outlines on Top. Export directly for ControlNet, Midjourney image-to-image, or DALL-E prompt seeds.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Footer Quick Clear -->
+      <div class="p-3 border-t border-slate-200 flex gap-2">
+        <button id="btn-wipe-sheet" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-lg text-xs font-semibold transition border border-slate-200">
+          Wipe Current Sheet
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- BOTTOM COLOR PALETTE & ARCHITECTURAL SWATCHES -->
+  <footer class="h-20 bg-white/95 border-t border-slate-200 px-4 flex items-center justify-between z-30 shrink-0 gap-4 shadow-sm">
+    
+    <!-- Primary & Secondary Color Wells -->
+    <div class="flex items-center gap-3">
+      <div class="relative w-12 h-12">
+        <div id="secondary-color-preview" class="absolute bottom-0 right-0 w-8 h-8 rounded-lg border-2 border-slate-300 shadow bg-white cursor-pointer" title="Secondary / Fill Color"></div>
+        <div id="primary-color-preview" class="absolute top-0 left-0 w-8 h-8 rounded-lg border-2 border-white shadow-md bg-black cursor-pointer" title="Primary Stroke Color"></div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-800">Color</span>
+          <input type="color" id="native-color-picker" value="#000000" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0">
+          <span id="hex-label" class="font-mono-code text-[11px] text-slate-600 font-semibold uppercase">#000000</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <button id="btn-swap-colors" class="hover:text-blue-600 font-medium transition flex items-center gap-1">
+            <i class="ph-bold ph-arrows-clockwise"></i> Swap (X)
+          </button>
+          <span>•</span>
+          <button id="btn-reset-bw" class="hover:text-slate-800 font-medium transition">
+            B&W (D)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comprehensive Architectural Color Swatches -->
+    <div class="flex-1 max-w-4xl flex flex-col gap-1.5 overflow-hidden">
+      
+      <!-- Row 1: Drafting Inks, Blueprints, Woods, and Materials -->
+      <div class="flex items-center gap-2 overflow-x-auto py-0.5">
+        <span class="text-[9px] uppercase tracking-wider text-slate-400 font-mono-code font-bold w-16 shrink-0">Material:</span>
+        <div class="flex items-center gap-1.5">
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#000000]" data-color="#000000" title="Deep Technical Ink"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#1e293b]" data-color="#1e293b" title="Charcoal"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#64748b]" data-color="#64748b" title="Lead Pencil"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#94a3b8]" data-color="#94a3b8" title="Silver Gray"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#ffffff]" data-color="#ffffff" title="Pure Drafting White"></button>
+          
+          <div class="h-4 w-[1px] bg-slate-200 mx-0.5"></div>
+
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#1e3a8a]" data-color="#1e3a8a" title="Blueprint Navy"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#2563eb]" data-color="#2563eb" title="Drafting Blue"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#0284c7]" data-color="#0284c7" title="Ocean Glass"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#38bdf8]" data-color="#38bdf8" title="Cyan Water"></button>
+          
+          <div class="h-4 w-[1px] bg-slate-200 mx-0.5"></div>
+
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#78350f]" data-color="#78350f" title="Timber Wood"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#b45309]" data-color="#b45309" title="Clay Brick"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#d97706]" data-color="#d97706" title="Warm Oak"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#15803d]" data-color="#15803d" title="Site Foliage"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#22c55e]" data-color="#22c55e" title="Landscape Lawn"></button>
+        </div>
+      </div>
+
+      <!-- Row 2: Visual Prompt Accent & Pastel Rendering Markers -->
+      <div class="flex items-center gap-2 overflow-x-auto py-0.5">
+        <span class="text-[9px] uppercase tracking-wider text-slate-400 font-mono-code font-bold w-16 shrink-0">Accent:</span>
+        <div class="flex items-center gap-1.5">
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#ef4444]" data-color="#ef4444" title="Crimson Alert"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#f97316]" data-color="#f97316" title="Vivid Orange"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#eab308]" data-color="#eab308" title="Highlighter Yellow"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#10b981]" data-color="#10b981" title="Emerald"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#06b6d4]" data-color="#06b6d4" title="Teal"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#6366f1]" data-color="#6366f1" title="Indigo Focus"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#a855f7]" data-color="#a855f7" title="Violet Shade"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#ec4899]" data-color="#ec4899" title="Rose Note"></button>
+
+          <div class="h-4 w-[1px] bg-slate-200 mx-0.5"></div>
+
+          <!-- Soft AI marker tones -->
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#fed7aa]" data-color="#fed7aa" title="Pastel Peach"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#fef08a]" data-color="#fef08a" title="Pastel Sand"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#bbf7d0]" data-color="#bbf7d0" title="Pastel Mint"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#bae6fd]" data-color="#bae6fd" title="Pastel Sky"></button>
+          <button class="swatch-btn w-6 h-6 rounded-md border border-slate-300 shadow-sm bg-[#e9d5ff]" data-color="#e9d5ff" title="Pastel Lilac"></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Laser Intersection Indicator Pill -->
+    <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+      <div class="text-right">
+        <div class="text-[11px] font-bold text-slate-800">Laser Intersection</div>
+        <div class="text-[10px] text-emerald-600 font-mono-code font-semibold" id="laser-status-summary">595, 421 mm</div>
+      </div>
+      <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/50 animate-pulse"></div>
+    </div>
+
+  </footer>
+
+  <!-- PERSISTENT MEMORY SLOTS MODAL -->
+  <div id="modal-slots" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-xl w-full p-5 flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i class="ph-bold ph-floppy-disk text-lg"></i>
+          </div>
+          <h2 class="text-base font-bold text-slate-900">Project Memory Slots</h2>
+        </div>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500">
+        Store your active 3-sheet drawing draft into one of 4 browser memory slots. Retains all layer data for future architectural revisions or prompt generation sessions.
+      </p>
+
+      <div class="flex flex-col gap-3 py-1" id="slots-container">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 text-xs">
+        <button id="btn-close-modal-footer" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-semibold transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST FEEDBACK NOTIFICATIONS -->
+  <div id="toast-container" class="fixed bottom-24 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    /*
+     * IDEAPAD ARCHITECTURAL SUITE
+     * Architecture & Logic:
+     * - Landscape A3 Dimensions (1190 x 842 pt/px)
+     * - Multi-sheet persistence (Sheets 1, 2, 3) with 3 layers per sheet (Top, Middle, Bottom)
+     * - Interactive dual Neon Green Laser alignment guidelines with handles & intersection crosshair
+     * - Smooth Collapsible Right Panel with pop-out tab
+     * - Snap-to-Grid mathematical snapping
+     * - Freehand (Pen, Texter, Brush, Spray, Eraser) & Geometric (Line, Polyline, Rect, Circle, Triangle)
+     * - LocalStorage Slots and High-Resolution Snapshot Exporters
+     */
+
+    const CANVAS_WIDTH = 1190;
+    const CANVAS_HEIGHT = 842;
+
+    const STATE = {
+      activeSheet: 0,
+      activeLayer: 'top',
+      activeTool: 'pen',
+      primaryColor: '#000000',
+      secondaryColor: '#ffffff',
+      strokeWidth: 3,
+      opacity: 1.0,
+      snapToGrid: true,
+      showGrid: true,
+      gridSize: 25, // in pixels (representing mm)
+
+      // Laser Guide Coordinate State
+      laser: {
+        visible: true,
+        locked: false,
+        x: Math.round(CANVAS_WIDTH / 2),
+        y: Math.round(CANVAS_HEIGHT / 2)
+      },
+
+      // Polyline Ongoing Points
+      polylinePoints: [],
+
+      // Sidebar collapsed state
+      sidebarCollapsed: false,
+
+      // Sheet Layer History and Configuration
+      sheets: [
+        {
+          layers: {
+            bottom: { visible: true, opacity: 1 },
+            middle: { visible: true, opacity: 1 },
+            top: { visible: true, opacity: 1 }
+          },
+          undoStack: [],
+          redoStack: []
+        },
+        {
+          layers: {
+            bottom: { visible: true, opacity: 1 },
+            middle: { visible: true, opacity: 1 },
+            top: { visible: true, opacity: 1 }
+          },
+          undoStack: [],
+          redoStack: []
+        },
+        {
+          layers: {
+            bottom: { visible: true, opacity: 1 },
+            middle: { visible: true, opacity: 1 },
+            top: { visible: true, opacity: 1 }
+          },
+          undoStack: [],
+          redoStack: []
+        }
+      ]
+    };
+
+    // Canvas DOM elements & Contexts
+    const layerBottom = document.getElementById('layer-bottom');
+    const layerMiddle = document.getElementById('layer-middle');
+    const layerTop = document.getElementById('layer-top');
+    const canvasScratch = document.getElementById('canvas-scratch');
+
+    const ctxBottom = layerBottom.getContext('2d');
+    const ctxMiddle = layerMiddle.getContext('2d');
+    const ctxTop = layerTop.getContext('2d');
+    const ctxScratch = canvasScratch.getContext('2d');
+
+    const layerMap = {
+      bottom: { canvas: layerBottom, ctx: ctxBottom },
+      middle: { canvas: layerMiddle, ctx: ctxMiddle },
+      top: { canvas: layerTop, ctx: ctxTop }
+    };
+
+    // In-memory sheet canvas caching across tab switches
+    const sheetDataStorage = [null, null, null];
+
+    // Interaction trackers
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let sprayInterval = null;
+
+    // Laser Handle Dragging Trackers
+    let isDraggingLaserH = false;
+    let isDraggingLaserV = false;
+
+    function initMeasurementRulers() {
+      const vCanvas = document.getElementById('ruler-v-canvas');
+      const hCanvas = document.getElementById('ruler-h-canvas');
+      const dpr = window.devicePixelRatio || 1;
+
+      // Vertical Ruler (Height = 842)
+      vCanvas.width = 32 * dpr;
+      vCanvas.height = CANVAS_HEIGHT * dpr;
+      const vCtx = vCanvas.getContext('2d');
+      vCtx.scale(dpr, dpr);
+
+      // Horizontal Ruler (Width = 1190)
+      hCanvas.width = CANVAS_WIDTH * dpr;
+      hCanvas.height = 32 * dpr;
+      const hCtx = hCanvas.getContext('2d');
+      hCtx.scale(dpr, dpr);
+
+      // Render Vertical Ruler
+      vCtx.fillStyle = '#f8fafc';
+      vCtx.fillRect(0, 0, 32, CANVAS_HEIGHT);
+      vCtx.strokeStyle = '#94a3b8';
+      vCtx.fillStyle = '#475569';
+      vCtx.font = '8px JetBrains Mono, monospace';
+      vCtx.textAlign = 'right';
+
+      for (let y = 0; y <= CANVAS_HEIGHT; y += 10) {
+        const isMajor = (y % 50 === 0);
+        const tickLen = isMajor ? 14 : (y % 25 === 0 ? 9 : 5);
+        vCtx.beginPath();
+        vCtx.moveTo(32 - tickLen, y);
+        vCtx.lineTo(32, y);
+        vCtx.stroke();
+
+        if (isMajor && y > 15 && y < CANVAS_HEIGHT - 10) {
+          vCtx.fillText(y, 16, y + 3);
+        }
+      }
+
+      // Render Horizontal Ruler
+      hCtx.fillStyle = '#f8fafc';
+      hCtx.fillRect(0, 0, CANVAS_WIDTH, 32);
+      hCtx.strokeStyle = '#94a3b8';
+      hCtx.fillStyle = '#475569';
+      hCtx.font = '8px JetBrains Mono, monospace';
+      hCtx.textAlign = 'center';
+
+      for (let x = 0; x <= CANVAS_WIDTH; x += 10) {
+        const isMajor = (x % 50 === 0);
+        const tickLen = isMajor ? 14 : (x % 25 === 0 ? 9 : 5);
+        hCtx.beginPath();
+        hCtx.moveTo(x, 0);
+        hCtx.lineTo(x, tickLen);
+        hCtx.stroke();
+
+        if (isMajor && x > 15 && x < CANVAS_WIDTH - 20) {
+          hCtx.fillText(x, x, 24);
+        }
+      }
+    }
+
+    /* Laser Guide Update System */
+    function updateLaserPosition(newX, newY) {
+      if (newX !== null) {
+        STATE.laser.x = Math.max(0, Math.min(CANVAS_WIDTH, Math.round(newX)));
+      }
+      if (newY !== null) {
+        STATE.laser.y = Math.max(0, Math.min(CANVAS_HEIGHT, Math.round(newY)));
+      }
+
+      const x = STATE.laser.x;
+      const y = STATE.laser.y;
+
+      // Update vertical laser line (shooting up across canvas)
+      const vBeam = document.getElementById('laser-vertical-beam');
+      vBeam.style.left = `${x}px`;
+
+      // Update horizontal laser line (shooting right across canvas)
+      const hBeam = document.getElementById('laser-horizontal-beam');
+      hBeam.style.top = `${y}px`;
+
+      // Update intersection crosshair
+      const crosshair = document.getElementById('laser-crosshair-badge');
+      crosshair.style.left = `${x}px`;
+      crosshair.style.top = `${y}px`;
+
+      // Update handle positions on the rulers
+      // Horizontal slider handle sits along bottom ruler
+      const handleH = document.getElementById('handle-laser-h');
+      handleH.style.left = `${x}px`;
+
+      // Vertical slider handle sits along left ruler
+      const handleV = document.getElementById('handle-laser-v');
+      handleV.style.top = `${y}px`;
+
+      // Update HUD displays
+      const hudBadge = document.getElementById('hud-badge');
+      hudBadge.textContent = `X: ${x} | Y: ${y} mm`;
+
+      document.getElementById('laser-cross-coords').textContent = `Laser X: ${x} mm | Y: ${y} mm`;
+      document.getElementById('laser-status-summary').textContent = `${x}, ${y} mm`;
+
+      // Sync input values if not currently focused
+      if (document.activeElement !== document.getElementById('input-laser-x')) {
+        document.getElementById('input-laser-x').value = x;
+      }
+      if (document.activeElement !== document.getElementById('input-laser-y')) {
+        document.getElementById('input-laser-y').value = y;
+      }
+    }
+
+    function toggleLaserVisibility(show) {
+      STATE.laser.visible = show;
+      const container = document.getElementById('laser-container');
+      const handleH = document.getElementById('handle-laser-h');
+      const handleV = document.getElementById('handle-laser-v');
+      
+      const displayVal = show ? 'block' : 'none';
+      container.style.display = displayVal;
+      handleH.style.display = displayVal;
+      handleV.style.display = displayVal;
+      document.getElementById('toggle-laser').checked = show;
+    }
+
+    function setSidebarCollapsed(collapse) {
+      STATE.sidebarCollapsed = collapse;
+      const sidebar = document.getElementById('sidebar-right');
+      const arrowIcon = document.getElementById('collapse-arrow-icon');
+
+      if (collapse) {
+        // Slide away completely to the right
+        sidebar.style.transform = 'translateX(100%)';
+        sidebar.style.boxShadow = 'none';
+        arrowIcon.className = 'ph-bold ph-caret-left text-base';
+      } else {
+        // Slide back into view
+        sidebar.style.transform = 'translateX(0)';
+        sidebar.style.boxShadow = '';
+        arrowIcon.className = 'ph-bold ph-caret-right text-base';
+      }
+    }
+
+    function toggleSidebar() {
+      setSidebarCollapsed(!STATE.sidebarCollapsed);
+    }
+
+    // Coordinate conversion with optional grid snapping
+    function getCanvasCoordinates(e) {
+      const rect = canvasScratch.getBoundingClientRect();
+      const scaleX = CANVAS_WIDTH / rect.width;
+      const scaleY = CANVAS_HEIGHT / rect.height;
+
+      let clientX = e.clientX;
+      let clientY = e.clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      }
+
+      let x = (clientX - rect.left) * scaleX;
+      let y = (clientY - rect.top) * scaleY;
+
+      if (STATE.snapToGrid) {
+        const step = STATE.gridSize;
+        x = Math.round(x / step) * step;
+        y = Math.round(y / step) * step;
+      }
+
+      x = Math.max(0, Math.min(CANVAS_WIDTH, Math.round(x)));
+      y = Math.max(0, Math.min(CANVAS_HEIGHT, Math.round(y)));
+
+      return { x, y };
+    }
+
+    function updateCursorDisplay(x, y) {
+      document.getElementById('cursor-coords').textContent = `Ptr X: ${String(x).padStart(4, '0')} | Y: ${String(y).padStart(4, '0')}`;
+    }
+
+    function saveHistoryState() {
+      const currentSheet = STATE.sheets[STATE.activeSheet];
+      const snapshot = {
+        bottom: ctxBottom.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        middle: ctxMiddle.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        top: ctxTop.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      };
+
+      currentSheet.undoStack.push(snapshot);
+      if (currentSheet.undoStack.length > 25) {
+        currentSheet.undoStack.shift();
+      }
+      currentSheet.redoStack = [];
+      updateUndoRedoUI();
+    }
+
+    function applySnapshot(snapshot) {
+      if (!snapshot) return;
+      ctxBottom.putImageData(snapshot.bottom, 0, 0);
+      ctxMiddle.putImageData(snapshot.middle, 0, 0);
+      ctxTop.putImageData(snapshot.top, 0, 0);
+    }
+
+    function undo() {
+      const currentSheet = STATE.sheets[STATE.activeSheet];
+      if (currentSheet.undoStack.length === 0) return;
+
+      const currentSnapshot = {
+        bottom: ctxBottom.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        middle: ctxMiddle.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        top: ctxTop.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      };
+      currentSheet.redoStack.push(currentSnapshot);
+
+      const previous = currentSheet.undoStack.pop();
+      applySnapshot(previous);
+      updateUndoRedoUI();
+      showToast('Undo action');
+    }
+
+    function redo() {
+      const currentSheet = STATE.sheets[STATE.activeSheet];
+      if (currentSheet.redoStack.length === 0) return;
+
+      const currentSnapshot = {
+        bottom: ctxBottom.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        middle: ctxMiddle.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        top: ctxTop.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      };
+      currentSheet.undoStack.push(currentSnapshot);
+
+      const next = currentSheet.redoStack.pop();
+      applySnapshot(next);
+      updateUndoRedoUI();
+      showToast('Redo action');
+    }
+
+    function updateUndoRedoUI() {
+      const currentSheet = STATE.sheets[STATE.activeSheet];
+      document.getElementById('btn-undo').disabled = currentSheet.undoStack.length === 0;
+      document.getElementById('btn-redo').disabled = currentSheet.redoStack.length === 0;
+    }
+
+    function saveCurrentSheetToMemory() {
+      sheetDataStorage[STATE.activeSheet] = {
+        bottom: ctxBottom.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        middle: ctxMiddle.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT),
+        top: ctxTop.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      };
+    }
+
+    function loadSheetFromMemory(sheetIndex) {
+      clearAllLayers();
+      const saved = sheetDataStorage[sheetIndex];
+      if (saved) {
+        ctxBottom.putImageData(saved.bottom, 0, 0);
+        ctxMiddle.putImageData(saved.middle, 0, 0);
+        ctxTop.putImageData(saved.top, 0, 0);
+      }
+      updateUndoRedoUI();
+      document.getElementById('sidebar-sheet-status').textContent = `Active: Sheet ${sheetIndex + 1}`;
+    }
+
+    function switchSheet(newIndex) {
+      if (newIndex === STATE.activeSheet) return;
+      saveCurrentSheetToMemory();
+      STATE.activeSheet = newIndex;
+
+      document.querySelectorAll('.sheet-tab').forEach(tab => {
+        const idx = parseInt(tab.dataset.sheet, 10);
+        if (idx === newIndex) {
+          tab.className = 'sheet-tab active px-3 py-1 text-xs rounded-md font-semibold transition-all bg-white text-blue-600 shadow-sm border border-slate-200/80 flex items-center gap-1.5';
+        } else {
+          tab.className = 'sheet-tab px-3 py-1 text-xs rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition-all flex items-center gap-1.5';
+        }
+      });
+
+      cancelPolyline();
+      loadSheetFromMemory(newIndex);
+      showToast(`Switched to Sheet ${newIndex + 1}`);
+    }
+
+    function clearAllLayers() {
+      ctxBottom.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      ctxMiddle.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      ctxTop.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      ctxScratch.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
+
+    function getActiveContext() {
+      return layerMap[STATE.activeLayer].ctx;
+    }
+
+    function setupContextStyle(ctx, toolType = STATE.activeTool) {
+      ctx.strokeStyle = STATE.primaryColor;
+      ctx.fillStyle = STATE.primaryColor;
+      ctx.lineWidth = STATE.strokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalAlpha = STATE.opacity;
+
+      if (toolType === 'pen') {
+        ctx.lineWidth = Math.max(1, STATE.strokeWidth);
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = STATE.opacity;
+      } else if (toolType === 'texter') {
+        // Semi-translucent highlighter chisel stroke
+        ctx.lineWidth = Math.max(8, STATE.strokeWidth * 2.6);
+        ctx.lineCap = 'square';
+        ctx.lineJoin = 'bevel';
+        ctx.globalAlpha = Math.min(0.42, STATE.opacity * 0.42);
+      } else if (toolType === 'brush') {
+        ctx.lineWidth = STATE.strokeWidth * 1.8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalAlpha = STATE.opacity * 0.85;
+      } else if (toolType === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = STATE.strokeWidth * 3.5;
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = 1.0;
+        return;
+      }
+
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // Airbrush / Spray paint spatter
+    function executeSpray(ctx, x, y) {
+      const density = 25 + (STATE.strokeWidth * 2);
+      const radius = STATE.strokeWidth * 3.5;
+      ctx.fillStyle = STATE.primaryColor;
+      ctx.globalAlpha = Math.min(0.35, STATE.opacity * 0.35);
+
+      for (let i = 0; i < density; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * radius;
+        const px = x + Math.cos(angle) * dist;
+        const py = y + Math.sin(angle) * dist;
+        const dotSize = Math.random() * 1.8 + 0.6;
+        ctx.fillRect(px, py, dotSize, dotSize);
+      }
+    }
+
+    // Hollow geometric shapes renderer
+    function drawHollowShape(ctx, tool, x1, y1, x2, y2) {
+      ctx.beginPath();
+      if (tool === 'line') {
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      } else if (tool === 'rect') {
+        ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+      } else if (tool === 'circle') {
+        const rx = Math.abs(x2 - x1) / 2;
+        const ry = Math.abs(y2 - y1) / 2;
+        const cx = Math.min(x1, x2) + rx;
+        const cy = Math.min(y1, y2) + ry;
+        ctx.ellipse(cx, cy, Math.max(1, rx), Math.max(1, ry), 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (tool === 'triangle') {
+        const topX = x1 + (x2 - x1) / 2;
+        const topY = y1;
+        ctx.moveTo(topX, topY);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x1, y2);
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+
+    // Polyline / Closed polygon loop logic
+    function handlePolylineClick(point) {
+      if (STATE.polylinePoints.length === 0) {
+        saveHistoryState();
+        STATE.polylinePoints.push(point);
+        document.getElementById('active-poly-status').classList.remove('hidden');
+        renderPolylinePreview(point);
+        showToast('Polyline started: Click next point');
+        return;
+      }
+
+      const firstPoint = STATE.polylinePoints[0];
+      const distToStart = Math.hypot(point.x - firstPoint.x, point.y - firstPoint.y);
+
+      // If clicked near starting vertex (Point A), automatically close loop
+      if (STATE.polylinePoints.length >= 2 && distToStart < 20) {
+        finishPolyline(true);
+        return;
+      }
+
+      STATE.polylinePoints.push(point);
+      renderPolylinePreview(point);
+    }
+
+    function renderPolylinePreview(hoverPoint) {
+      ctxScratch.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      if (STATE.polylinePoints.length === 0) return;
+
+      setupContextStyle(ctxScratch, 'pen');
+      ctxScratch.beginPath();
+      ctxScratch.moveTo(STATE.polylinePoints[0].x, STATE.polylinePoints[0].y);
+
+      for (let i = 1; i < STATE.polylinePoints.length; i++) {
+        ctxScratch.lineTo(STATE.polylinePoints[i].x, STATE.polylinePoints[i].y);
+      }
+
+      if (hoverPoint) {
+        ctxScratch.lineTo(hoverPoint.x, hoverPoint.y);
+      }
+      ctxScratch.stroke();
+
+      // Render vertex dots
+      STATE.polylinePoints.forEach((pt, index) => {
+        ctxScratch.fillStyle = index === 0 ? '#10b981' : '#3b82f6';
+        ctxScratch.beginPath();
+        ctxScratch.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
+        ctxScratch.fill();
+        ctxScratch.strokeStyle = '#ffffff';
+        ctxScratch.lineWidth = 1.5;
+        ctxScratch.stroke();
+      });
+    }
+
+    function finishPolyline(closeLoop = false) {
+      if (STATE.polylinePoints.length < 2) {
+        cancelPolyline();
+        return;
+      }
+
+      const activeCtx = getActiveContext();
+      setupContextStyle(activeCtx, 'pen');
+      activeCtx.beginPath();
+      activeCtx.moveTo(STATE.polylinePoints[0].x, STATE.polylinePoints[0].y);
+
+      for (let i = 1; i < STATE.polylinePoints.length; i++) {
+        activeCtx.lineTo(STATE.polylinePoints[i].x, STATE.polylinePoints[i].y);
+      }
+
+      if (closeLoop) {
+        activeCtx.closePath();
+      }
+      activeCtx.stroke();
+
+      cancelPolyline();
+      showToast(closeLoop ? 'Closed polygon loop completed' : 'Polyline completed');
+    }
+
+    function cancelPolyline() {
+      STATE.polylinePoints = [];
+      ctxScratch.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      document.getElementById('active-poly-status').classList.add('hidden');
+    }
+
+    function onPointerDown(e) {
+      const coords = getCanvasCoordinates(e);
+      startX = coords.x;
+      startY = coords.y;
+      currentX = coords.x;
+      currentY = coords.y;
+
+      if (STATE.activeTool === 'select') {
+        // Position laser directly to clicked coordinate
+        if (!STATE.laser.locked) {
+          updateLaserPosition(startX, startY);
+        }
+        return;
+      }
+
+      if (STATE.activeTool === 'polyline') {
+        handlePolylineClick(coords);
+        return;
+      }
+
+      saveHistoryState();
+      isDrawing = true;
+      const targetCtx = getActiveContext();
+      setupContextStyle(targetCtx);
+
+      if (['pen', 'texter', 'brush', 'eraser'].includes(STATE.activeTool)) {
+        targetCtx.beginPath();
+        targetCtx.moveTo(startX, startY);
+        targetCtx.lineTo(startX + 0.1, startY + 0.1);
+        targetCtx.stroke();
+      } else if (STATE.activeTool === 'spray') {
+        executeSpray(targetCtx, startX, startY);
+        sprayInterval = setInterval(() => {
+          executeSpray(targetCtx, currentX, currentY);
+        }, 35);
+      }
+    }
+
+    function onPointerMove(e) {
+      const coords = getCanvasCoordinates(e);
+      currentX = coords.x;
+      currentY = coords.y;
+      updateCursorDisplay(currentX, currentY);
+
+      if (STATE.activeTool === 'polyline' && STATE.polylinePoints.length > 0) {
+        renderPolylinePreview(coords);
+        return;
+      }
+
+      if (!isDrawing) return;
+
+      const targetCtx = getActiveContext();
+
+      if (['pen', 'texter', 'brush', 'eraser'].includes(STATE.activeTool)) {
+        targetCtx.lineTo(currentX, currentY);
+        targetCtx.stroke();
+      } else if (['line', 'rect', 'circle', 'triangle'].includes(STATE.activeTool)) {
+        ctxScratch.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        setupContextStyle(ctxScratch);
+        drawHollowShape(ctxScratch, STATE.activeTool, startX, startY, currentX, currentY);
+      }
+    }
+
+    function onPointerUp(e) {
+      if (sprayInterval) {
+        clearInterval(sprayInterval);
+        sprayInterval = null;
+      }
+
+      if (!isDrawing) return;
+      isDrawing = false;
+
+      const targetCtx = getActiveContext();
+
+      if (['line', 'rect', 'circle', 'triangle'].includes(STATE.activeTool)) {
+        ctxScratch.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        setupContextStyle(targetCtx);
+        drawHollowShape(targetCtx, STATE.activeTool, startX, startY, currentX, currentY);
+      } else if (['pen', 'texter', 'brush', 'eraser'].includes(STATE.activeTool)) {
+        targetCtx.closePath();
+      }
+    }
+
+    // Ruler Drag Events for Horizontal (Bottom) and Vertical (Left) Laser Handles
+    function initLaserHandleInteractions() {
+      const handleH = document.getElementById('handle-laser-h');
+      const handleV = document.getElementById('handle-laser-v');
+      const rulerH = document.getElementById('ruler-horizontal');
+      const rulerV = document.getElementById('ruler-vertical');
+
+      // Drag Bottom Handle (Controls X / Vertical Laser Line)
+      handleH.addEventListener('mousedown', (e) => {
+        if (STATE.laser.locked) return;
+        e.stopPropagation();
+        isDraggingLaserH = true;
+      });
+
+      rulerH.addEventListener('click', (e) => {
+        if (STATE.laser.locked) return;
+        const rect = rulerH.getBoundingClientRect();
+        const scaleX = CANVAS_WIDTH / rect.width;
+        let x = (e.clientX - rect.left) * scaleX;
+        if (STATE.snapToGrid) x = Math.round(x / STATE.gridSize) * STATE.gridSize;
+        updateLaserPosition(x, null);
+      });
+
+      // Drag Left Handle (Controls Y / Horizontal Laser Line)
+      handleV.addEventListener('mousedown', (e) => {
+        if (STATE.laser.locked) return;
+        e.stopPropagation();
+        isDraggingLaserV = true;
+      });
+
+      rulerV.addEventListener('click', (e) => {
+        if (STATE.laser.locked) return;
+        const rect = rulerV.getBoundingClientRect();
+        const scaleY = CANVAS_HEIGHT / rect.height;
+        let y = (e.clientY - rect.top) * scaleY;
+        if (STATE.snapToGrid) y = Math.round(y / STATE.gridSize) * STATE.gridSize;
+        updateLaserPosition(null, y);
+      });
+
+      // Global window movement during handle dragging
+      window.addEventListener('mousemove', (e) => {
+        if (isDraggingLaserH) {
+          const rect = rulerH.getBoundingClientRect();
+          const scaleX = CANVAS_WIDTH / rect.width;
+          let x = (e.clientX - rect.left) * scaleX;
+          if (STATE.snapToGrid) x = Math.round(x / STATE.gridSize) * STATE.gridSize;
+          updateLaserPosition(x, null);
+        } else if (isDraggingLaserV) {
+          const rect = rulerV.getBoundingClientRect();
+          const scaleY = CANVAS_HEIGHT / rect.height;
+          let y = (e.clientY - rect.top) * scaleY;
+          if (STATE.snapToGrid) y = Math.round(y / STATE.gridSize) * STATE.gridSize;
+          updateLaserPosition(null, y);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDraggingLaserH = false;
+        isDraggingLaserV = false;
+      });
+    }
+
+    function setLayerVisibility(layerKey, visible) {
+      const canvasEl = layerMap[layerKey].canvas;
+      canvasEl.style.display = visible ? 'block' : 'none';
+      STATE.sheets[STATE.activeSheet].layers[layerKey].visible = visible;
+
+      const btn = document.querySelector(`.layer-vis-btn[data-target="${layerKey}"] i`);
+      if (btn) {
+        btn.className = visible ? 'ph-bold ph-eye text-base' : 'ph-bold ph-eye-slash text-base text-slate-400';
+      }
+    }
+
+    function selectActiveLayer(layerKey) {
+      STATE.activeLayer = layerKey;
+      document.querySelectorAll('.layer-item').forEach(el => {
+        if (el.dataset.layer === layerKey) {
+          el.className = 'layer-item active p-3 rounded-xl border border-blue-500 bg-blue-50/70 shadow-sm flex flex-col gap-2 cursor-pointer transition';
+          const badge = el.querySelector('span.uppercase');
+          if (badge) {
+            badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold uppercase';
+            badge.textContent = 'Active';
+          }
+        } else {
+          el.className = 'layer-item p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 shadow-sm flex flex-col gap-2 cursor-pointer transition';
+          const badge = el.querySelector('span.uppercase');
+          if (badge) {
+            badge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold uppercase';
+            badge.textContent = 'Layer';
+          }
+        }
+      });
+      showToast(`Active drawing on ${layerKey.toUpperCase()} Layer`);
+    }
+
+    function clearSpecificLayer(layerKey) {
+      saveHistoryState();
+      layerMap[layerKey].ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      showToast(`Cleared ${layerKey} layer`);
+    }
+
+    // Color Management
+    function setPrimaryColor(colorHex) {
+      STATE.primaryColor = colorHex;
+      document.getElementById('primary-color-preview').style.backgroundColor = colorHex;
+      document.getElementById('native-color-picker').value = colorHex;
+      document.getElementById('hex-label').textContent = colorHex.toUpperCase();
+    }
+
+    function setSecondaryColor(colorHex) {
+      STATE.secondaryColor = colorHex;
+      document.getElementById('secondary-color-preview').style.backgroundColor = colorHex;
+    }
+
+    function swapColors() {
+      const temp = STATE.primaryColor;
+      setPrimaryColor(STATE.secondaryColor);
+      setSecondaryColor(temp);
+      showToast('Colors swapped');
+    }
+
+    function exportCanvasSnapshot(format = 'image/png') {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = CANVAS_WIDTH;
+      exportCanvas.height = CANVAS_HEIGHT;
+      const expCtx = exportCanvas.getContext('2d');
+
+      if (format === 'image/jpeg') {
+        expCtx.fillStyle = '#ffffff';
+        expCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      }
+
+      const sheetLayers = STATE.sheets[STATE.activeSheet].layers;
+      if (sheetLayers.bottom.visible) expCtx.drawImage(layerBottom, 0, 0);
+      if (sheetLayers.middle.visible) expCtx.drawImage(layerMiddle, 0, 0);
+      if (sheetLayers.top.visible) expCtx.drawImage(layerTop, 0, 0);
+
+      const ext = format === 'image/jpeg' ? 'jpg' : 'png';
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `IdeaPad-A3-Sheet${STATE.activeSheet + 1}-${timestamp}.${ext}`;
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = exportCanvas.toDataURL(format, 0.95);
+      link.click();
+      showToast(`Saved snapshot: ${filename}`);
+    }
+
+    function copyCanvasToClipboard() {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = CANVAS_WIDTH;
+      exportCanvas.height = CANVAS_HEIGHT;
+      const expCtx = exportCanvas.getContext('2d');
+      expCtx.fillStyle = '#ffffff';
+      expCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      const sheetLayers = STATE.sheets[STATE.activeSheet].layers;
+      if (sheetLayers.bottom.visible) expCtx.drawImage(layerBottom, 0, 0);
+      if (sheetLayers.middle.visible) expCtx.drawImage(layerMiddle, 0, 0);
+      if (sheetLayers.top.visible) expCtx.drawImage(layerTop, 0, 0);
+
+      exportCanvas.toBlob(blob => {
+        if (!blob) return;
+        try {
+          const item = new ClipboardItem({ 'image/png': blob });
+          navigator.clipboard.write([item]).then(() => {
+            showToast('Snapshot copied to clipboard!');
+          }).catch(() => {
+            showToast('Clipboard permissions denied. Use Export Snapshot.');
+          });
+        } catch (err) {
+          showToast('Clipboard export unavailable in this environment.');
+        }
+      });
+    }
+
+    // LocalStorage Persistent Slots
+    const STORAGE_KEY = 'ideapad_saved_slots_v2';
+
+    function getSavedSlots() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveToSlot(slotId) {
+      saveCurrentSheetToMemory();
+      const slots = getSavedSlots();
+
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = 160;
+      thumbCanvas.height = 113;
+      const thumbCtx = thumbCanvas.getContext('2d');
+      thumbCtx.fillStyle = '#ffffff';
+      thumbCtx.fillRect(0, 0, 160, 113);
+      thumbCtx.drawImage(layerBottom, 0, 0, 160, 113);
+      thumbCtx.drawImage(layerMiddle, 0, 0, 160, 113);
+      thumbCtx.drawImage(layerTop, 0, 0, 160, 113);
+
+      const serializedSheets = [0, 1, 2].map(idx => {
+        const data = sheetDataStorage[idx];
+        if (!data) return null;
+
+        const tempCanv = document.createElement('canvas');
+        tempCanv.width = CANVAS_WIDTH;
+        tempCanv.height = CANVAS_HEIGHT;
+        const tempCtx = tempCanv.getContext('2d');
+
+        tempCtx.putImageData(data.bottom, 0, 0);
+        const b64Bottom = tempCanv.toDataURL();
+
+        tempCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        tempCtx.putImageData(data.middle, 0, 0);
+        const b64Middle = tempCanv.toDataURL();
+
+        tempCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        tempCtx.putImageData(data.top, 0, 0);
+        const b64Top = tempCanv.toDataURL();
+
+        return { bottom: b64Bottom, middle: b64Middle, top: b64Top };
+      });
+
+      slots[slotId] = {
+        name: `Project Slot ${slotId}`,
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString(),
+        thumbnail: thumbCanvas.toDataURL('image/jpeg', 0.65),
+        sheets: serializedSheets
+      };
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(slots));
+        showToast(`Saved project state to Slot ${slotId}`);
+        renderSlotsUI();
+      } catch (err) {
+        showToast('Storage quota exceeded!');
+      }
+    }
+
+    function loadFromSlot(slotId) {
+      const slots = getSavedSlots();
+      const slot = slots[slotId];
+      if (!slot) return;
+
+      const loadImg = (src) => new Promise(resolve => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+
+      Promise.all(slot.sheets.map(async (sheet) => {
+        if (!sheet) return null;
+        const [bImg, mImg, tImg] = await Promise.all([
+          loadImg(sheet.bottom),
+          loadImg(sheet.middle),
+          loadImg(sheet.top)
+        ]);
+
+        const tempCanv = document.createElement('canvas');
+        tempCanv.width = CANVAS_WIDTH;
+        tempCanv.height = CANVAS_HEIGHT;
+        const tCtx = tempCanv.getContext('2d');
+
+        const res = {};
+        if (bImg) {
+          tCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          tCtx.drawImage(bImg, 0, 0);
+          res.bottom = tCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        }
+        if (mImg) {
+          tCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          tCtx.drawImage(mImg, 0, 0);
+          res.middle = tCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        }
+        if (tImg) {
+          tCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          tCtx.drawImage(tImg, 0, 0);
+          res.top = tCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        }
+        return res;
+      })).then(loadedSheets => {
+        for (let i = 0; i < 3; i++) {
+          sheetDataStorage[i] = loadedSheets[i] || null;
+        }
+        loadSheetFromMemory(STATE.activeSheet);
+        closeModal();
+        showToast(`Loaded Slot ${slotId} successfully`);
+      });
+    }
+
+    function renderSlotsUI() {
+      const container = document.getElementById('slots-container');
+      const slots = getSavedSlots();
+      container.innerHTML = '';
+
+      for (let i = 1; i <= 4; i++) {
+        const slot = slots[i];
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition';
+
+        const thumb = slot && slot.thumbnail 
+          ? `<img src="${slot.thumbnail}" class="w-16 h-11 object-cover rounded-lg border border-slate-300 shadow-sm" alt="Preview">`
+          : `<div class="w-16 h-11 rounded-lg border border-dashed border-slate-300 flex items-center justify-center text-[9px] text-slate-400 font-mono-code">EMPTY</div>`;
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            ${thumb}
+            <div>
+              <div class="text-xs font-bold text-slate-800">Slot ${i}</div>
+              <div class="text-[10px] text-slate-500 font-mono-code">${slot ? slot.date : 'Empty memory slot'}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn-save-slot px-3 py-1.5 text-xs font-semibold rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-sm transition" data-slot="${i}">
+              Save
+            </button>
+            <button class="btn-load-slot px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition ${!slot ? 'opacity-40 pointer-events-none' : ''}" data-slot="${i}">
+              Load
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      }
+
+      container.querySelectorAll('.btn-save-slot').forEach(btn => {
+        btn.addEventListener('click', (e) => saveToSlot(e.target.dataset.slot));
+      });
+      container.querySelectorAll('.btn-load-slot').forEach(btn => {
+        btn.addEventListener('click', (e) => loadFromSlot(e.target.dataset.slot));
+      });
+    }
+
+    function openModal() {
+      renderSlotsUI();
+      document.getElementById('modal-slots').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-slots').classList.add('hidden');
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'px-3.5 py-2 bg-slate-900 text-white text-xs rounded-xl shadow-2xl flex items-center gap-2 transition-all transform translate-y-2 opacity-0';
+      toast.innerHTML = `<i class="ph-bold ph-info text-blue-400"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 20);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 2400);
+    }
+
+    function selectTool(toolName) {
+      if (STATE.polylinePoints.length > 0 && toolName !== 'polyline') {
+        cancelPolyline();
+      }
+
+      STATE.activeTool = toolName;
+
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        if (btn.dataset.tool === toolName) {
+          btn.className = 'tool-btn active w-10 h-10 rounded-xl flex items-center justify-center text-white bg-blue-600 shadow-md shadow-blue-500/25 transition';
+        } else {
+          btn.className = 'tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition';
+        }
+      });
+
+      const labelMap = {
+        select: { icon: 'ph-crosshair', name: 'Laser / Coordinate Inspector' },
+        pen: { icon: 'ph-pen-nib', name: 'Technical Ink Pen' },
+        texter: { icon: 'ph-highlighter', name: 'Texter / Chisel Marker' },
+        brush: { icon: 'ph-paint-brush', name: 'Artist Brush' },
+        spray: { icon: 'ph-drop', name: 'Airbrush / Spray' },
+        eraser: { icon: 'ph-eraser', name: 'Drafting Eraser' },
+        line: { icon: 'ph-line-segment', name: 'Straight Line' },
+        polyline: { icon: 'ph-polygon', name: 'Polyline / Closed Loop' },
+        rect: { icon: 'ph-square', name: 'Hollow Rectangle' },
+        circle: { icon: 'ph-circle', name: 'Hollow Circle' },
+        triangle: { icon: 'ph-triangle', name: 'Hollow Triangle' }
+      };
+
+      const info = labelMap[toolName] || { icon: 'ph-pencil', name: toolName };
+      document.getElementById('active-tool-name').innerHTML = `<i class="ph-bold ${info.icon}"></i> ${info.name}`;
+      canvasScratch.className = toolName === 'select' ? 'absolute inset-0 cursor-crosshair z-10' : 'absolute inset-0 cursor-crosshair z-10';
+    }
+
+    window.addEventListener('load', () => {
+      initMeasurementRulers();
+      initLaserHandleInteractions();
+      updateLaserPosition(595, 421); // Default laser intersection centered on A3 canvas
+
+      // Tool selection clicks
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => selectTool(btn.dataset.tool));
+      });
+
+      // Sheet tab buttons
+      document.querySelectorAll('.sheet-tab').forEach(btn => {
+        btn.addEventListener('click', () => switchSheet(parseInt(btn.dataset.sheet, 10)));
+      });
+
+      // Layer selection clicks
+      document.querySelectorAll('.layer-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.layer-vis-btn') || e.target.closest('.layer-clear-btn')) return;
+          selectActiveLayer(item.dataset.layer);
+        });
+      });
+
+      // Layer visibility toggle buttons
+      document.querySelectorAll('.layer-vis-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const target = btn.dataset.target;
+          const currentVis = STATE.sheets[STATE.activeSheet].layers[target].visible;
+          setLayerVisibility(target, !currentVis);
+        });
+      });
+
+      // Layer clear buttons
+      document.querySelectorAll('.layer-clear-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          clearSpecificLayer(btn.dataset.target);
+        });
+      });
+
+      // Sidebar collapsible triggers
+      document.getElementById('btn-toggle-sidebar').addEventListener('click', toggleSidebar);
+      document.getElementById('btn-tab-collapse').addEventListener('click', toggleSidebar);
+      document.getElementById('btn-sidebar-close').addEventListener('click', () => setSidebarCollapsed(true));
+
+      // Laser toggle checkbox & center button
+      document.getElementById('toggle-laser').addEventListener('change', (e) => toggleLaserVisibility(e.target.checked));
+      document.getElementById('btn-reset-laser').addEventListener('click', () => {
+        updateLaserPosition(Math.round(CANVAS_WIDTH / 2), Math.round(CANVAS_HEIGHT / 2));
+        showToast('Centered laser guidelines');
+      });
+
+      // Laser coordinate inputs
+      document.getElementById('input-laser-x').addEventListener('input', (e) => updateLaserPosition(e.target.value, null));
+      document.getElementById('input-laser-y').addEventListener('input', (e) => updateLaserPosition(null, e.target.value));
+      document.getElementById('btn-lock-laser').addEventListener('click', (e) => {
+        STATE.laser.locked = !STATE.laser.locked;
+        e.currentTarget.innerHTML = STATE.laser.locked 
+          ? '<i class="ph-bold ph-lock-key-open"></i> Unlock' 
+          : '<i class="ph-bold ph-lock-key"></i> Lock';
+        showToast(STATE.laser.locked ? 'Laser guides locked' : 'Laser guides unlocked');
+      });
+
+      // Canvas pointer listeners
+      canvasScratch.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      // Touch screen support
+      canvasScratch.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        onPointerDown(e);
+      }, { passive: false });
+
+      window.addEventListener('touchmove', (e) => {
+        if (isDrawing || STATE.polylinePoints.length > 0) e.preventDefault();
+        onPointerMove(e);
+      }, { passive: false });
+
+      window.addEventListener('touchend', (e) => onPointerUp(e));
+
+      canvasScratch.addEventListener('dblclick', () => {
+        if (STATE.activeTool === 'polyline') finishPolyline(false);
+      });
+
+      // Color swatches & picker
+      document.querySelectorAll('.swatch-btn').forEach(btn => {
+        btn.addEventListener('click', () => setPrimaryColor(btn.dataset.color));
+      });
+      document.getElementById('native-color-picker').addEventListener('input', (e) => setPrimaryColor(e.target.value));
+      document.getElementById('btn-swap-colors').addEventListener('click', swapColors);
+      document.getElementById('btn-reset-bw').addEventListener('click', () => {
+        setPrimaryColor('#000000');
+        setSecondaryColor('#ffffff');
+      });
+
+      // Tool property sliders
+      document.getElementById('prop-stroke-width').addEventListener('input', (e) => {
+        STATE.strokeWidth = parseInt(e.target.value, 10);
+        document.getElementById('label-stroke-width').textContent = `${STATE.strokeWidth}px`;
+      });
+      document.getElementById('prop-opacity').addEventListener('input', (e) => {
+        STATE.opacity = parseInt(e.target.value, 10) / 100;
+        document.getElementById('label-opacity').textContent = `${e.target.value}%`;
+      });
+
+      // Snap to Grid & Grid View controls
+      document.getElementById('prop-snap-grid').addEventListener('change', (e) => {
+        STATE.snapToGrid = e.target.checked;
+        showToast(STATE.snapToGrid ? 'Snap to Grid active' : 'Snap to Grid disabled');
+      });
+      document.getElementById('prop-show-grid').addEventListener('change', (e) => {
+        STATE.showGrid = e.target.checked;
+        document.getElementById('grid-sub').style.display = STATE.showGrid ? 'block' : 'none';
+        document.getElementById('grid-major').style.display = STATE.showGrid ? 'block' : 'none';
+      });
+      document.getElementById('prop-grid-step').addEventListener('change', (e) => {
+        STATE.gridSize = parseInt(e.target.value, 10);
+        document.documentElement.style.setProperty('--grid-size', `${STATE.gridSize}px`);
+      });
+
+      // History Undo/Redo & Wipe
+      document.getElementById('btn-undo').addEventListener('click', undo);
+      document.getElementById('btn-redo').addEventListener('click', redo);
+      document.getElementById('btn-clear-active').addEventListener('click', () => clearSpecificLayer(STATE.activeLayer));
+      document.getElementById('btn-wipe-sheet').addEventListener('click', () => {
+        saveHistoryState();
+        clearAllLayers();
+        showToast('Wiped current sheet canvas');
+      });
+
+      // Snapshot Export actions
+      document.getElementById('btn-export-png').addEventListener('click', () => exportCanvasSnapshot('image/png'));
+      document.getElementById('btn-export-jpg').addEventListener('click', () => exportCanvasSnapshot('image/jpeg'));
+      document.getElementById('btn-copy-clipboard').addEventListener('click', copyCanvasToClipboard);
+
+      // Memory slot modal
+      document.getElementById('btn-manage-slots').addEventListener('click', openModal);
+      document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+      document.getElementById('btn-close-modal-footer').addEventListener('click', closeModal);
+
+      // Global Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          undo();
+        }
+        if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+          e.preventDefault();
+          redo();
+        }
+        if (e.key.toLowerCase() === 'x') swapColors();
+        if (e.key.toLowerCase() === 'd') {
+          setPrimaryColor('#000000');
+          setSecondaryColor('#ffffff');
+        }
+        if (e.key.toLowerCase() === 'v') selectTool('select');
+        if (e.key.toLowerCase() === 'p') selectTool('pen');
+        if (e.key.toLowerCase() === 'b') selectTool('brush');
+        if (e.key.toLowerCase() === 'e') selectTool('eraser');
+        if (e.key.toLowerCase() === 'l') selectTool('line');
+        if (e.key.toLowerCase() === 'r') selectTool('rect');
+        if (e.key.toLowerCase() === 'c') selectTool('circle');
+        if (e.key === 'Escape' && STATE.polylinePoints.length > 0) {
+          cancelPolyline();
+          showToast('Polyline canceled');
+        }
+      });
+
+      // Boot defaults
+      selectTool('pen');
+      setPrimaryColor('#000000');
+      selectActiveLayer('top');
+      updateUndoRedoUI();
+    });
+  </script>
+</body>
+</html>
