@@ -239,23 +239,41 @@
         <span>Memory Slots</span>
       </button>
 
-      <!-- Export Snapshot Dropdown -->
-      <div class="relative group">
+      <!-- Export Snapshot Dropdown (Click-to-Toggle with click-outside protection) -->
+      <div class="relative" id="export-dropdown-wrapper">
         <button id="btn-export-dropdown" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/25 transition">
           <i class="ph-bold ph-camera"></i>
           <span>Snapshot</span>
-          <i class="ph-bold ph-caret-down text-[10px]"></i>
+          <i id="export-caret-icon" class="ph-bold ph-caret-down text-[10px] transition-transform duration-200"></i>
         </button>
-        <div class="absolute right-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50 hidden group-hover:block hover:block">
-          <button id="btn-export-png" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition">
-            <span class="font-bold text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">PNG</span> High Res Transparent
+        <div id="export-dropdown-menu" class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-2xl py-1.5 z-50 hidden transition-all">
+          <div class="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <span>Snapshot Export</span>
+            <i class="ph-bold ph-download-simple text-slate-400"></i>
+          </div>
+          <button id="btn-export-png" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2.5 transition">
+            <span class="font-bold text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded shadow-sm">PNG</span>
+            <div class="flex flex-col">
+              <span class="font-medium leading-none">Export as PNG</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">High-Res Transparent / AI Ready</span>
+            </div>
           </button>
-          <button id="btn-export-jpg" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition">
-            <span class="font-bold text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">JPG</span> Flattened Drafting White
+          <button id="btn-export-jpg" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2.5 transition">
+            <span class="font-bold text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded shadow-sm">JPG</span>
+            <div class="flex flex-col">
+              <span class="font-medium leading-none">Export as JPEG</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">Flattened White Blueprint</span>
+            </div>
           </button>
           <div class="border-t border-slate-100 my-1"></div>
-          <button id="btn-copy-clipboard" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition">
-            <i class="ph-bold ph-copy text-amber-500"></i> Copy to Clipboard
+          <button id="btn-copy-clipboard" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2.5 transition">
+            <div class="w-6 h-6 rounded bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <i class="ph-bold ph-copy text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-medium leading-none">Copy to Clipboard</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">Paste directly into AI chat / editor</span>
+            </div>
           </button>
         </div>
       </div>
@@ -294,6 +312,9 @@
       </button>
       <button data-tool="spray" title="Spray Paint / Airbrush Spatter" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
         <i class="ph-bold ph-drop text-lg"></i>
+      </button>
+      <button data-tool="bucket" title="Paint Fill Bucket (G) - Flood Fill Hollow Shapes & Areas" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-paint-bucket text-lg"></i>
       </button>
       <button data-tool="eraser" title="Drafting Eraser" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
         <i class="ph-bold ph-eraser text-lg"></i>
@@ -838,6 +859,99 @@
       top: { canvas: layerTop, ctx: ctxTop }
     };
 
+    // Helper: Hex color to RGBA array
+    function hexToRgba(hex, alpha = 1) {
+      let c = hex.replace('#', '');
+      if (c.length === 3) {
+        c = c.split('').map(x => x + x).join('');
+      }
+      const num = parseInt(c, 16);
+      return [
+        (num >> 16) & 255,
+        (num >> 8) & 255,
+        num & 255,
+        Math.round(alpha * 255)
+      ];
+    }
+
+    // Fast 4-way stack-based Flood Fill algorithm
+    function floodFill(targetCtx, startX, startY, fillColorHex, fillOpacity = 1.0, tolerance = 32) {
+      startX = Math.floor(startX);
+      startY = Math.floor(startY);
+      if (startX < 0 || startX >= CANVAS_WIDTH || startY < 0 || startY >= CANVAS_HEIGHT) return;
+
+      const imgData = targetCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      const data = imgData.data;
+
+      const fillRgba = hexToRgba(fillColorHex, fillOpacity);
+      const targetIndex = (startY * CANVAS_WIDTH + startX) * 4;
+
+      const targetR = data[targetIndex];
+      const targetG = data[targetIndex + 1];
+      const targetB = data[targetIndex + 2];
+      const targetA = data[targetIndex + 3];
+
+      // If clicked color matches fill color within tolerance, no action needed
+      const initialDiff = Math.abs(targetR - fillRgba[0]) +
+                          Math.abs(targetG - fillRgba[1]) +
+                          Math.abs(targetB - fillRgba[2]) +
+                          Math.abs(targetA - fillRgba[3]);
+      if (initialDiff <= 10) return;
+
+      function colorMatch(idx) {
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const a = data[idx + 3];
+
+        return (
+          Math.abs(r - targetR) <= tolerance &&
+          Math.abs(g - targetG) <= tolerance &&
+          Math.abs(b - targetB) <= tolerance &&
+          Math.abs(a - targetA) <= tolerance
+        );
+      }
+
+      const visited = new Uint8Array(CANVAS_WIDTH * CANVAS_HEIGHT);
+      const pixelStack = [startX, startY];
+      visited[startY * CANVAS_WIDTH + startX] = 1;
+
+      while (pixelStack.length > 0) {
+        const y = pixelStack.pop();
+        const x = pixelStack.pop();
+        const idx = (y * CANVAS_WIDTH + x) * 4;
+
+        data[idx] = fillRgba[0];
+        data[idx + 1] = fillRgba[1];
+        data[idx + 2] = fillRgba[2];
+        data[idx + 3] = fillRgba[3];
+
+        const neighbors = [
+          [x + 1, y],
+          [x - 1, y],
+          [x, y + 1],
+          [x, y - 1]
+        ];
+
+        for (let i = 0; i < 4; i++) {
+          const nx = neighbors[i][0];
+          const ny = neighbors[i][1];
+
+          if (nx >= 0 && nx < CANVAS_WIDTH && ny >= 0 && ny < CANVAS_HEIGHT) {
+            const nCoord = ny * CANVAS_WIDTH + nx;
+            if (!visited[nCoord]) {
+              visited[nCoord] = 1;
+              if (colorMatch(nCoord * 4)) {
+                pixelStack.push(nx, ny);
+              }
+            }
+          }
+        }
+      }
+
+      targetCtx.putImageData(imgData, 0, 0);
+    }
+
     // In-memory sheet canvas caching across tab switches
     const sheetDataStorage = [null, null, null];
 
@@ -1325,6 +1439,14 @@
         return;
       }
 
+      if (STATE.activeTool === 'bucket') {
+        saveHistoryState();
+        const targetCtx = getActiveContext();
+        floodFill(targetCtx, startX, startY, STATE.primaryColor, STATE.opacity, 32);
+        showToast('Area filled');
+        return;
+      }
+
       saveHistoryState();
       isDrawing = true;
       const targetCtx = getActiveContext();
@@ -1771,6 +1893,7 @@
         texter: { icon: 'ph-highlighter', name: 'Texter / Chisel Marker' },
         brush: { icon: 'ph-paint-brush', name: 'Artist Brush' },
         spray: { icon: 'ph-drop', name: 'Airbrush / Spray' },
+        bucket: { icon: 'ph-paint-bucket', name: 'Paint Fill Bucket' },
         eraser: { icon: 'ph-eraser', name: 'Drafting Eraser' },
         line: { icon: 'ph-line-segment', name: 'Straight Line' },
         polyline: { icon: 'ph-polygon', name: 'Polyline / Closed Loop' },
@@ -1781,12 +1904,57 @@
 
       const info = labelMap[toolName] || { icon: 'ph-pencil', name: toolName };
       document.getElementById('active-tool-name').innerHTML = `<i class="ph-bold ${info.icon}"></i> ${info.name}`;
-      canvasScratch.className = toolName === 'select' ? 'absolute inset-0 cursor-crosshair z-10' : 'absolute inset-0 cursor-crosshair z-10';
+      
+      if (toolName === 'bucket') {
+        canvasScratch.style.cursor = 'crosshair';
+      } else {
+        canvasScratch.style.cursor = 'crosshair';
+      }
+    }
+
+    // Persistent Snapshot Dropdown management
+    function initSnapshotDropdown() {
+      const btn = document.getElementById('btn-export-dropdown');
+      const menu = document.getElementById('export-dropdown-menu');
+      const caret = document.getElementById('export-caret-icon');
+
+      function toggleMenu(show) {
+        const isHidden = menu.classList.contains('hidden');
+        const shouldShow = show !== undefined ? show : isHidden;
+
+        if (shouldShow) {
+          menu.classList.remove('hidden');
+          caret.style.transform = 'rotate(180deg)';
+        } else {
+          menu.classList.add('hidden');
+          caret.style.transform = 'rotate(0deg)';
+        }
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      // Close when clicking any menu button
+      menu.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+          toggleMenu(false);
+        });
+      });
+
+      // Close when clicking outside
+      window.addEventListener('click', (e) => {
+        if (!e.target.closest('#export-dropdown-wrapper')) {
+          toggleMenu(false);
+        }
+      });
     }
 
     window.addEventListener('load', () => {
       initMeasurementRulers();
       initLaserHandleInteractions();
+      initSnapshotDropdown();
       updateLaserPosition(595, 421); // Default laser intersection centered on A3 canvas
 
       // Tool selection clicks
@@ -1946,6 +2114,7 @@
         if (e.key.toLowerCase() === 'v') selectTool('select');
         if (e.key.toLowerCase() === 'p') selectTool('pen');
         if (e.key.toLowerCase() === 'b') selectTool('brush');
+        if (e.key.toLowerCase() === 'g') selectTool('bucket');
         if (e.key.toLowerCase() === 'e') selectTool('eraser');
         if (e.key.toLowerCase() === 'l') selectTool('line');
         if (e.key.toLowerCase() === 'r') selectTool('rect');
