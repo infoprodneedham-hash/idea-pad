@@ -162,6 +162,9 @@
 
 <body class="h-screen w-screen flex flex-col bg-slate-100 text-slate-800">
 
+  <!-- HIDDEN RESTORE FILE INPUT -->
+  <input type="file" id="json-file-input" accept=".json,application/json" class="hidden" />
+
   <!-- TOP HEADER / NAV BAR -->
   <header class="h-13 bg-white/90 backdrop-blur border-b border-slate-200/80 px-4 flex items-center justify-between z-40 shrink-0 shadow-sm">
     <!-- Brand & Blueprint Info -->
@@ -239,40 +242,64 @@
         <span>Memory Slots</span>
       </button>
 
-      <!-- Export Snapshot Dropdown (Click-to-Toggle with click-outside protection) -->
+      <!-- Export Snapshot Dropdown -->
       <div class="relative" id="export-dropdown-wrapper">
         <button id="btn-export-dropdown" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/25 transition">
           <i class="ph-bold ph-camera"></i>
           <span>Snapshot</span>
           <i id="export-caret-icon" class="ph-bold ph-caret-down text-[10px] transition-transform duration-200"></i>
         </button>
-        <div id="export-dropdown-menu" class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-2xl py-1.5 z-50 hidden transition-all">
+        <div id="export-dropdown-menu" class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-2xl py-1.5 z-50 hidden transition-all">
           <div class="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            <span>Snapshot Export</span>
+            <span>Visual Export</span>
             <i class="ph-bold ph-download-simple text-slate-400"></i>
           </div>
-          <button id="btn-export-png" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2.5 transition">
+          <button id="btn-export-png" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2.5 transition">
             <span class="font-bold text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded shadow-sm">PNG</span>
             <div class="flex flex-col">
               <span class="font-medium leading-none">Export as PNG</span>
               <span class="text-[10px] text-slate-400 mt-0.5">High-Res Transparent / AI Ready</span>
             </div>
           </button>
-          <button id="btn-export-jpg" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2.5 transition">
+          <button id="btn-export-jpg" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2.5 transition">
             <span class="font-bold text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded shadow-sm">JPG</span>
             <div class="flex flex-col">
               <span class="font-medium leading-none">Export as JPEG</span>
               <span class="text-[10px] text-slate-400 mt-0.5">Flattened White Blueprint</span>
             </div>
           </button>
-          <div class="border-t border-slate-100 my-1"></div>
-          <button id="btn-copy-clipboard" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2.5 transition">
+          <button id="btn-copy-clipboard" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2.5 transition">
             <div class="w-6 h-6 rounded bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
               <i class="ph-bold ph-copy text-sm"></i>
             </div>
             <div class="flex flex-col">
               <span class="font-medium leading-none">Copy to Clipboard</span>
               <span class="text-[10px] text-slate-400 mt-0.5">Paste directly into AI chat / editor</span>
+            </div>
+          </button>
+
+          <!-- 1-CLICK JSON DATA SNAPSHOT EXPORT & RESTORE -->
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+            <span>JSON Stored Data</span>
+            <i class="ph-bold ph-brackets-curly text-slate-400"></i>
+          </div>
+          <button id="btn-export-json" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-cyan-50 hover:text-cyan-800 flex items-center gap-2.5 transition">
+            <div class="w-6 h-6 rounded bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 font-mono-code font-bold text-[10px]">
+              { }
+            </div>
+            <div class="flex flex-col">
+              <span class="font-semibold leading-none text-slate-800">Download JSON Snapshot</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">Save all sheets & layers locally</span>
+            </div>
+          </button>
+          <button id="btn-restore-json" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-800 flex items-center gap-2.5 transition">
+            <div class="w-6 h-6 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <i class="ph-bold ph-upload-simple text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-semibold leading-none text-slate-800">Restore from JSON File</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">Reload project snapshot file</span>
             </div>
           </button>
         </div>
@@ -315,6 +342,9 @@
       </button>
       <button data-tool="bucket" title="Paint Fill Bucket (G) - Flood Fill Hollow Shapes & Areas" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
         <i class="ph-bold ph-paint-bucket text-lg"></i>
+      </button>
+      <button data-tool="text" title="Architectural Typography & Text Label Tool (T)" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
+        <i class="ph-bold ph-text-t text-lg"></i>
       </button>
       <button data-tool="eraser" title="Drafting Eraser" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition">
         <i class="ph-bold ph-eraser text-lg"></i>
@@ -360,20 +390,49 @@
 
           <div class="h-3 w-[1px] bg-slate-300"></div>
 
-          <!-- Stroke Size Slider -->
-          <div class="flex items-center gap-2">
-            <span class="text-slate-500 font-medium">Thickness:</span>
-            <input type="range" id="prop-stroke-width" min="1" max="60" value="3" class="w-20 accent-blue-600 cursor-pointer">
-            <span id="label-stroke-width" class="font-mono-code text-[11px] text-slate-800 w-6">3px</span>
+          <!-- DYNAMIC TOOL OPTIONS: STROKE & OPACITY -->
+          <div id="standard-tool-controls" class="flex items-center gap-4">
+            <!-- Stroke Size Slider -->
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500 font-medium">Thickness:</span>
+              <input type="range" id="prop-stroke-width" min="1" max="60" value="3" class="w-20 accent-blue-600 cursor-pointer">
+              <span id="label-stroke-width" class="font-mono-code text-[11px] text-slate-800 w-6">3px</span>
+            </div>
+
+            <div class="h-3 w-[1px] bg-slate-300"></div>
+
+            <!-- Opacity Slider -->
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500 font-medium">Opacity:</span>
+              <input type="range" id="prop-opacity" min="5" max="100" value="100" class="w-16 accent-blue-600 cursor-pointer">
+              <span id="label-opacity" class="font-mono-code text-[11px] text-slate-800 w-8">100%</span>
+            </div>
           </div>
 
-          <div class="h-3 w-[1px] bg-slate-300"></div>
+          <!-- DYNAMIC TEXT TOOL OPTIONS (HIDDEN UNTIL TEXT TOOL IS ACTIVE) -->
+          <div id="text-tool-controls" class="hidden flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500 font-medium">Font:</span>
+              <select id="prop-text-font" class="bg-slate-100 border border-slate-200 text-slate-800 text-[11px] rounded px-2 py-0.5 outline-none font-medium">
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Arial" selected>Arial</option>
+                <option value="Century Gothic, sans-serif">Century Gothic</option>
+                <option value="Trebuchet MS, sans-serif">Trebuchet</option>
+              </select>
+            </div>
 
-          <!-- Opacity Slider -->
-          <div class="flex items-center gap-2">
-            <span class="text-slate-500 font-medium">Opacity:</span>
-            <input type="range" id="prop-opacity" min="5" max="100" value="100" class="w-16 accent-blue-600 cursor-pointer">
-            <span id="label-opacity" class="font-mono-code text-[11px] text-slate-800 w-8">100%</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500 font-medium">Size:</span>
+              <select id="prop-text-size" class="bg-slate-100 border border-slate-200 text-slate-800 text-[11px] rounded px-2 py-0.5 outline-none font-mono-code font-medium">
+                <option value="12">12 pt</option>
+                <option value="16">16 pt</option>
+                <option value="20" selected>20 pt</option>
+                <option value="24">24 pt</option>
+                <option value="32">32 pt</option>
+                <option value="48">48 pt</option>
+                <option value="64">64 pt</option>
+              </select>
+            </div>
           </div>
 
           <div class="h-3 w-[1px] bg-slate-300"></div>
@@ -416,7 +475,6 @@
       <div id="viewport" class="flex-1 relative overflow-auto flex items-center justify-center p-8">
         
         <!-- A3 CANVAS ASSEMBLY (Including Left & Bottom Rulers) -->
-        <!-- Fixed A3 Landscape dimensions: 1190 x 842 pt/px -->
         <div id="canvas-workspace-box" class="relative architect-paper rounded shadow-2xl" style="padding-left: 32px; padding-bottom: 32px;">
           
           <!-- LEFT VERTICAL MEASUREMENT RULER -->
@@ -452,13 +510,8 @@
             <div id="grid-major" class="canvas-grid-major absolute inset-0"></div>
 
             <!-- THREE CANVAS LAYERS -->
-            <!-- Layer 1: Bottom (Foundation / Layout / Wireframe) -->
             <canvas id="layer-bottom" width="1190" height="842" class="absolute inset-0 pointer-events-none"></canvas>
-
-            <!-- Layer 2: Middle (Drafting / Color Wash / Notes) -->
             <canvas id="layer-middle" width="1190" height="842" class="absolute inset-0 pointer-events-none"></canvas>
-
-            <!-- Layer 3: Top (Ink / Outlines / Final Architectural Detail) -->
             <canvas id="layer-top" width="1190" height="842" class="absolute inset-0 pointer-events-none"></canvas>
 
             <!-- Interactive Drawing Scratchpad -->
@@ -466,15 +519,9 @@
 
             <!-- NEON GREEN LASER BEAMS & CROSSHAIR INTERSECTION -->
             <div id="laser-container" class="absolute inset-0 pointer-events-none z-20">
-              <!-- Vertical Laser Guideline (Shoots from bottom up) -->
               <div id="laser-vertical-beam" class="laser-line-v" style="left: 595px;"></div>
-              
-              <!-- Horizontal Laser Guideline (Shoots from left across) -->
               <div id="laser-horizontal-beam" class="laser-line-h" style="top: 421px;"></div>
-
-              <!-- Glowing Crosshair at Intersection -->
               <div id="laser-crosshair-badge" class="laser-crosshair" style="left: 595px; top: 421px;">
-                <!-- Mini coordinate HUD badge floating near crosshair -->
                 <div id="hud-badge" class="absolute left-6 top-6 bg-slate-900/90 text-emerald-400 font-mono-code text-[10px] px-2 py-0.5 rounded shadow-lg border border-emerald-500/50 whitespace-nowrap pointer-events-none">
                   X: 595 | Y: 421 mm
                 </div>
@@ -489,10 +536,10 @@
 
     </main>
 
-    <!-- RIGHT COLLAPSIBLE SIDEBAR (SLIDES OUT TO THE RIGHT) -->
+    <!-- RIGHT COLLAPSIBLE SIDEBAR -->
     <aside id="sidebar-right" class="w-72 bg-white/95 backdrop-blur border-l border-slate-200 flex flex-col z-30 shrink-0 shadow-lg slide-panel-transition relative">
       
-      <!-- Pop-out / Slide-in Toggle Tab attached to sidebar's left edge -->
+      <!-- Pop-out / Slide-in Toggle Tab -->
       <button id="btn-tab-collapse" class="absolute -left-7 top-16 w-7 h-12 bg-white border-l border-y border-slate-300 rounded-l-lg shadow-md flex items-center justify-center text-slate-600 hover:text-blue-600 transition" title="Slide Away / Pop Out Options">
         <i id="collapse-arrow-icon" class="ph-bold ph-caret-right text-base"></i>
       </button>
@@ -769,18 +816,6 @@
 
   <!-- JAVASCRIPT APPLICATION LOGIC -->
   <script>
-    /*
-     * IDEAPAD ARCHITECTURAL SUITE
-     * Architecture & Logic:
-     * - Landscape A3 Dimensions (1190 x 842 pt/px)
-     * - Multi-sheet persistence (Sheets 1, 2, 3) with 3 layers per sheet (Top, Middle, Bottom)
-     * - Interactive dual Neon Green Laser alignment guidelines with handles & intersection crosshair
-     * - Smooth Collapsible Right Panel with pop-out tab
-     * - Snap-to-Grid mathematical snapping
-     * - Freehand (Pen, Texter, Brush, Spray, Eraser) & Geometric (Line, Polyline, Rect, Circle, Triangle)
-     * - LocalStorage Slots and High-Resolution Snapshot Exporters
-     */
-
     const CANVAS_WIDTH = 1190;
     const CANVAS_HEIGHT = 842;
 
@@ -795,6 +830,10 @@
       snapToGrid: true,
       showGrid: true,
       gridSize: 25, // in pixels (representing mm)
+
+      // Typography properties
+      textFont: 'Arial',
+      textSize: 20,
 
       // Laser Guide Coordinate State
       laser: {
@@ -891,7 +930,6 @@
       const targetB = data[targetIndex + 2];
       const targetA = data[targetIndex + 3];
 
-      // If clicked color matches fill color within tolerance, no action needed
       const initialDiff = Math.abs(targetR - fillRgba[0]) +
                           Math.abs(targetG - fillRgba[1]) +
                           Math.abs(targetB - fillRgba[2]) +
@@ -1039,11 +1077,11 @@
       const x = STATE.laser.x;
       const y = STATE.laser.y;
 
-      // Update vertical laser line (shooting up across canvas)
+      // Update vertical laser line
       const vBeam = document.getElementById('laser-vertical-beam');
       vBeam.style.left = `${x}px`;
 
-      // Update horizontal laser line (shooting right across canvas)
+      // Update horizontal laser line
       const hBeam = document.getElementById('laser-horizontal-beam');
       hBeam.style.top = `${y}px`;
 
@@ -1052,12 +1090,10 @@
       crosshair.style.left = `${x}px`;
       crosshair.style.top = `${y}px`;
 
-      // Update handle positions on the rulers
-      // Horizontal slider handle sits along bottom ruler
+      // Update handle positions on rulers
       const handleH = document.getElementById('handle-laser-h');
       handleH.style.left = `${x}px`;
 
-      // Vertical slider handle sits along left ruler
       const handleV = document.getElementById('handle-laser-v');
       handleV.style.top = `${y}px`;
 
@@ -1068,7 +1104,6 @@
       document.getElementById('laser-cross-coords').textContent = `Laser X: ${x} mm | Y: ${y} mm`;
       document.getElementById('laser-status-summary').textContent = `${x}, ${y} mm`;
 
-      // Sync input values if not currently focused
       if (document.activeElement !== document.getElementById('input-laser-x')) {
         document.getElementById('input-laser-x').value = x;
       }
@@ -1096,12 +1131,10 @@
       const arrowIcon = document.getElementById('collapse-arrow-icon');
 
       if (collapse) {
-        // Slide away completely to the right
         sidebar.style.transform = 'translateX(100%)';
         sidebar.style.boxShadow = 'none';
         arrowIcon.className = 'ph-bold ph-caret-left text-base';
       } else {
-        // Slide back into view
         sidebar.style.transform = 'translateX(0)';
         sidebar.style.boxShadow = '';
         arrowIcon.className = 'ph-bold ph-caret-right text-base';
@@ -1112,7 +1145,6 @@
       setSidebarCollapsed(!STATE.sidebarCollapsed);
     }
 
-    // Coordinate conversion with optional grid snapping
     function getCanvasCoordinates(e) {
       const rect = canvasScratch.getBoundingClientRect();
       const scaleX = CANVAS_WIDTH / rect.width;
@@ -1271,7 +1303,6 @@
         ctx.lineCap = 'round';
         ctx.globalAlpha = STATE.opacity;
       } else if (toolType === 'texter') {
-        // Semi-translucent highlighter chisel stroke
         ctx.lineWidth = Math.max(8, STATE.strokeWidth * 2.6);
         ctx.lineCap = 'square';
         ctx.lineJoin = 'bevel';
@@ -1287,12 +1318,15 @@
         ctx.lineCap = 'round';
         ctx.globalAlpha = 1.0;
         return;
+      } else if (toolType === 'text') {
+        ctx.font = `${STATE.textSize}px ${STATE.textFont}`;
+        ctx.textBaseline = 'top';
+        ctx.globalAlpha = STATE.opacity;
       }
 
       ctx.globalCompositeOperation = 'source-over';
     }
 
-    // Airbrush / Spray paint spatter
     function executeSpray(ctx, x, y) {
       const density = 25 + (STATE.strokeWidth * 2);
       const radius = STATE.strokeWidth * 3.5;
@@ -1309,7 +1343,6 @@
       }
     }
 
-    // Hollow geometric shapes renderer
     function drawHollowShape(ctx, tool, x1, y1, x2, y2) {
       ctx.beginPath();
       if (tool === 'line') {
@@ -1336,7 +1369,6 @@
       }
     }
 
-    // Polyline / Closed polygon loop logic
     function handlePolylineClick(point) {
       if (STATE.polylinePoints.length === 0) {
         saveHistoryState();
@@ -1350,7 +1382,6 @@
       const firstPoint = STATE.polylinePoints[0];
       const distToStart = Math.hypot(point.x - firstPoint.x, point.y - firstPoint.y);
 
-      // If clicked near starting vertex (Point A), automatically close loop
       if (STATE.polylinePoints.length >= 2 && distToStart < 20) {
         finishPolyline(true);
         return;
@@ -1377,7 +1408,6 @@
       }
       ctxScratch.stroke();
 
-      // Render vertex dots
       STATE.polylinePoints.forEach((pt, index) => {
         ctxScratch.fillStyle = index === 0 ? '#10b981' : '#3b82f6';
         ctxScratch.beginPath();
@@ -1419,6 +1449,18 @@
       document.getElementById('active-poly-status').classList.add('hidden');
     }
 
+    // Interactive Text Stamping
+    function handleTextClick(point) {
+      const text = prompt('Enter annotation or architectural text:', '');
+      if (!text || text.trim() === '') return;
+
+      saveHistoryState();
+      const targetCtx = getActiveContext();
+      setupContextStyle(targetCtx, 'text');
+      targetCtx.fillText(text, point.x, point.y);
+      showToast('Text added to ' + STATE.activeLayer + ' layer');
+    }
+
     function onPointerDown(e) {
       const coords = getCanvasCoordinates(e);
       startX = coords.x;
@@ -1427,7 +1469,6 @@
       currentY = coords.y;
 
       if (STATE.activeTool === 'select') {
-        // Position laser directly to clicked coordinate
         if (!STATE.laser.locked) {
           updateLaserPosition(startX, startY);
         }
@@ -1436,6 +1477,11 @@
 
       if (STATE.activeTool === 'polyline') {
         handlePolylineClick(coords);
+        return;
+      }
+
+      if (STATE.activeTool === 'text') {
+        handleTextClick(coords);
         return;
       }
 
@@ -1510,14 +1556,12 @@
       }
     }
 
-    // Ruler Drag Events for Horizontal (Bottom) and Vertical (Left) Laser Handles
     function initLaserHandleInteractions() {
       const handleH = document.getElementById('handle-laser-h');
       const handleV = document.getElementById('handle-laser-v');
       const rulerH = document.getElementById('ruler-horizontal');
       const rulerV = document.getElementById('ruler-vertical');
 
-      // Drag Bottom Handle (Controls X / Vertical Laser Line)
       handleH.addEventListener('mousedown', (e) => {
         if (STATE.laser.locked) return;
         e.stopPropagation();
@@ -1533,7 +1577,6 @@
         updateLaserPosition(x, null);
       });
 
-      // Drag Left Handle (Controls Y / Horizontal Laser Line)
       handleV.addEventListener('mousedown', (e) => {
         if (STATE.laser.locked) return;
         e.stopPropagation();
@@ -1549,7 +1592,6 @@
         updateLaserPosition(null, y);
       });
 
-      // Global window movement during handle dragging
       window.addEventListener('mousemove', (e) => {
         if (isDraggingLaserH) {
           const rect = rulerH.getBoundingClientRect();
@@ -1684,6 +1726,146 @@
           showToast('Clipboard export unavailable in this environment.');
         }
       });
+    }
+
+    /* ==========================================================
+     * 1-CLICK JSON DATA SNAPSHOT DOWNLOAD & RESTORE ENGINE
+     * ========================================================== */
+    function exportJsonSnapshot() {
+      saveCurrentSheetToMemory();
+
+      const tempCanv = document.createElement('canvas');
+      tempCanv.width = CANVAS_WIDTH;
+      tempCanv.height = CANVAS_HEIGHT;
+      const tempCtx = tempCanv.getContext('2d');
+
+      const serializedSheets = [0, 1, 2].map(idx => {
+        const data = sheetDataStorage[idx];
+        if (!data) return null;
+
+        tempCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        tempCtx.putImageData(data.bottom, 0, 0);
+        const b64Bottom = tempCanv.toDataURL('image/png');
+
+        tempCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        tempCtx.putImageData(data.middle, 0, 0);
+        const b64Middle = tempCanv.toDataURL('image/png');
+
+        tempCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        tempCtx.putImageData(data.top, 0, 0);
+        const b64Top = tempCanv.toDataURL('image/png');
+
+        return {
+          bottom: b64Bottom,
+          middle: b64Middle,
+          top: b64Top,
+          layersConfig: STATE.sheets[idx].layers
+        };
+      });
+
+      const payload = {
+        app: 'IdeaPad Pro',
+        version: '2.0.0',
+        timestamp: new Date().toISOString(),
+        activeSheet: STATE.activeSheet,
+        activeLayer: STATE.activeLayer,
+        laser: STATE.laser,
+        gridSize: STATE.gridSize,
+        sheets: serializedSheets
+      };
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `IdeaPad-Snapshot-${timestamp}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast('JSON snapshot downloaded successfully!');
+    }
+
+    function triggerJsonRestore() {
+      const fileInput = document.getElementById('json-file-input');
+      fileInput.value = '';
+      fileInput.click();
+    }
+
+    function handleJsonFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (!data || !data.sheets || !Array.isArray(data.sheets)) {
+            throw new Error('Invalid IdeaPad snapshot format.');
+          }
+
+          const loadImg = (src) => new Promise(resolve => {
+            if (!src) return resolve(null);
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = src;
+          });
+
+          const tempCanv = document.createElement('canvas');
+          tempCanv.width = CANVAS_WIDTH;
+          tempCanv.height = CANVAS_HEIGHT;
+          const tCtx = tempCanv.getContext('2d');
+
+          for (let i = 0; i < 3; i++) {
+            const sheet = data.sheets[i];
+            if (sheet) {
+              const [bImg, mImg, tImg] = await Promise.all([
+                loadImg(sheet.bottom),
+                loadImg(sheet.middle),
+                loadImg(sheet.top)
+              ]);
+
+              const res = {};
+              if (bImg) {
+                tCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                tCtx.drawImage(bImg, 0, 0);
+                res.bottom = tCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+              }
+              if (mImg) {
+                tCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                tCtx.drawImage(mImg, 0, 0);
+                res.middle = tCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+              }
+              if (tImg) {
+                tCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                tCtx.drawImage(tImg, 0, 0);
+                res.top = tCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+              }
+
+              sheetDataStorage[i] = res;
+              if (sheet.layersConfig) {
+                STATE.sheets[i].layers = sheet.layersConfig;
+              }
+            } else {
+              sheetDataStorage[i] = null;
+            }
+          }
+
+          if (data.laser) {
+            updateLaserPosition(data.laser.x, data.laser.y);
+          }
+
+          const targetSheet = typeof data.activeSheet === 'number' ? data.activeSheet : 0;
+          switchSheet(targetSheet);
+          loadSheetFromMemory(targetSheet);
+          showToast('Project restored from JSON snapshot!');
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to parse JSON file.');
+        }
+      };
+      reader.readAsText(file);
     }
 
     // LocalStorage Persistent Slots
@@ -1894,6 +2076,7 @@
         brush: { icon: 'ph-paint-brush', name: 'Artist Brush' },
         spray: { icon: 'ph-drop', name: 'Airbrush / Spray' },
         bucket: { icon: 'ph-paint-bucket', name: 'Paint Fill Bucket' },
+        text: { icon: 'ph-text-t', name: 'Architectural Typography' },
         eraser: { icon: 'ph-eraser', name: 'Drafting Eraser' },
         line: { icon: 'ph-line-segment', name: 'Straight Line' },
         polyline: { icon: 'ph-polygon', name: 'Polyline / Closed Loop' },
@@ -1905,14 +2088,20 @@
       const info = labelMap[toolName] || { icon: 'ph-pencil', name: toolName };
       document.getElementById('active-tool-name').innerHTML = `<i class="ph-bold ${info.icon}"></i> ${info.name}`;
       
-      if (toolName === 'bucket') {
-        canvasScratch.style.cursor = 'crosshair';
+      const stdControls = document.getElementById('standard-tool-controls');
+      const txtControls = document.getElementById('text-tool-controls');
+
+      if (toolName === 'text') {
+        stdControls.classList.add('hidden');
+        txtControls.classList.remove('hidden');
+        canvasScratch.style.cursor = 'text';
       } else {
+        stdControls.classList.remove('hidden');
+        txtControls.classList.add('hidden');
         canvasScratch.style.cursor = 'crosshair';
       }
     }
 
-    // Persistent Snapshot Dropdown management
     function initSnapshotDropdown() {
       const btn = document.getElementById('btn-export-dropdown');
       const menu = document.getElementById('export-dropdown-menu');
@@ -1936,14 +2125,12 @@
         toggleMenu();
       });
 
-      // Close when clicking any menu button
       menu.querySelectorAll('button').forEach(b => {
         b.addEventListener('click', () => {
           toggleMenu(false);
         });
       });
 
-      // Close when clicking outside
       window.addEventListener('click', (e) => {
         if (!e.target.closest('#export-dropdown-wrapper')) {
           toggleMenu(false);
@@ -1955,19 +2142,16 @@
       initMeasurementRulers();
       initLaserHandleInteractions();
       initSnapshotDropdown();
-      updateLaserPosition(595, 421); // Default laser intersection centered on A3 canvas
+      updateLaserPosition(595, 421);
 
-      // Tool selection clicks
       document.querySelectorAll('.tool-btn').forEach(btn => {
         btn.addEventListener('click', () => selectTool(btn.dataset.tool));
       });
 
-      // Sheet tab buttons
       document.querySelectorAll('.sheet-tab').forEach(btn => {
         btn.addEventListener('click', () => switchSheet(parseInt(btn.dataset.sheet, 10)));
       });
 
-      // Layer selection clicks
       document.querySelectorAll('.layer-item').forEach(item => {
         item.addEventListener('click', (e) => {
           if (e.target.closest('.layer-vis-btn') || e.target.closest('.layer-clear-btn')) return;
@@ -1975,7 +2159,6 @@
         });
       });
 
-      // Layer visibility toggle buttons
       document.querySelectorAll('.layer-vis-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1985,7 +2168,6 @@
         });
       });
 
-      // Layer clear buttons
       document.querySelectorAll('.layer-clear-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1993,19 +2175,16 @@
         });
       });
 
-      // Sidebar collapsible triggers
       document.getElementById('btn-toggle-sidebar').addEventListener('click', toggleSidebar);
       document.getElementById('btn-tab-collapse').addEventListener('click', toggleSidebar);
       document.getElementById('btn-sidebar-close').addEventListener('click', () => setSidebarCollapsed(true));
 
-      // Laser toggle checkbox & center button
       document.getElementById('toggle-laser').addEventListener('change', (e) => toggleLaserVisibility(e.target.checked));
       document.getElementById('btn-reset-laser').addEventListener('click', () => {
         updateLaserPosition(Math.round(CANVAS_WIDTH / 2), Math.round(CANVAS_HEIGHT / 2));
         showToast('Centered laser guidelines');
       });
 
-      // Laser coordinate inputs
       document.getElementById('input-laser-x').addEventListener('input', (e) => updateLaserPosition(e.target.value, null));
       document.getElementById('input-laser-y').addEventListener('input', (e) => updateLaserPosition(null, e.target.value));
       document.getElementById('btn-lock-laser').addEventListener('click', (e) => {
@@ -2021,7 +2200,6 @@
       window.addEventListener('mousemove', onPointerMove);
       window.addEventListener('mouseup', onPointerUp);
 
-      // Touch screen support
       canvasScratch.addEventListener('touchstart', (e) => {
         e.preventDefault();
         onPointerDown(e);
@@ -2059,6 +2237,14 @@
         document.getElementById('label-opacity').textContent = `${e.target.value}%`;
       });
 
+      // Text tool property listeners
+      document.getElementById('prop-text-font').addEventListener('change', (e) => {
+        STATE.textFont = e.target.value;
+      });
+      document.getElementById('prop-text-size').addEventListener('change', (e) => {
+        STATE.textSize = parseInt(e.target.value, 10);
+      });
+
       // Snap to Grid & Grid View controls
       document.getElementById('prop-snap-grid').addEventListener('change', (e) => {
         STATE.snapToGrid = e.target.checked;
@@ -2084,10 +2270,13 @@
         showToast('Wiped current sheet canvas');
       });
 
-      // Snapshot Export actions
+      // Snapshot Export & JSON actions
       document.getElementById('btn-export-png').addEventListener('click', () => exportCanvasSnapshot('image/png'));
       document.getElementById('btn-export-jpg').addEventListener('click', () => exportCanvasSnapshot('image/jpeg'));
       document.getElementById('btn-copy-clipboard').addEventListener('click', copyCanvasToClipboard);
+      document.getElementById('btn-export-json').addEventListener('click', exportJsonSnapshot);
+      document.getElementById('btn-restore-json').addEventListener('click', triggerJsonRestore);
+      document.getElementById('json-file-input').addEventListener('change', handleJsonFileSelect);
 
       // Memory slot modal
       document.getElementById('btn-manage-slots').addEventListener('click', openModal);
@@ -2115,6 +2304,7 @@
         if (e.key.toLowerCase() === 'p') selectTool('pen');
         if (e.key.toLowerCase() === 'b') selectTool('brush');
         if (e.key.toLowerCase() === 'g') selectTool('bucket');
+        if (e.key.toLowerCase() === 't') selectTool('text');
         if (e.key.toLowerCase() === 'e') selectTool('eraser');
         if (e.key.toLowerCase() === 'l') selectTool('line');
         if (e.key.toLowerCase() === 'r') selectTool('rect');
